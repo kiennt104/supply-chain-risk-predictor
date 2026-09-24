@@ -20,20 +20,8 @@ Hệ thống được cấu trúc theo mô hình Modular hóa tối giản đạ
 
 ---
 
-## ⚡ Khởi chạy nhanh (Một chạm trên Windows)
+## ⚡ Khởi chạy nhanh trên local
 
 Hệ thống đã tự động cấu hóa môi trường Python an toàn tránh xung đột đa nền tảng. Bạn chỉ cần chạy hai file tự động hóa:
 - **Khởi chạy Web App**: Double-click vào [**`run.bat`**](./run.bat) (hoặc tệp PowerShell [**`run.ps1`**](./run.ps1)).
 - **Hướng dẫn triển khai chi tiết**: Tham khảo [**`SETUP.md`**](./SETUP.md).
-
----
-
-## 💡 Đề xuất các VS Code Extension bổ trợ đọc dự án này
-
-Để duyệt và đọc mã nguồn đồ án này mượt mà nhất, bạn nên cài đặt ngay các tiện ích mở rộng sau đây trong VS Code (bấm tổ hợp phím `Ctrl + Shift + X` để tìm kiếm và cài đặt):
-
-1. **Python** (`ms-python.python`) & **Pylance** (`ms-python.vscode-pylance`): Bộ đôi phân tích cú pháp tĩnh siêu mạnh (giúp hết báo Warning giả).
-2. **GitLens — Git supercharged** (`eamodio.gitlens`): Thuận tiện kiểm tra nhật ký lịch sử dòng code của đồ án.`
-3. **Prettier - Code formatter** (`esbenp.prettier-vscode`): Định dạng HTML/CSS của giao diện Dashboard tự động cân chỉnh lề dòng.
-4. **Graphviz Preview** (`joaompinto.vscode-graphviz`): Hỗ trợ trực quan hóa sơ đồ mối quan hệ thực thể nếu có viết mã biểu đồ.
-5. **Path Autocomplete** (`ionutvmi.path-autocomplete`): Tự động điền nhanh đường dẫn tệp tin khi viết mã import/export.
