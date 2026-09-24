@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AutoChain AI · Dự báo rủi ro giao hàng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#152340; --navy-2:#1B2A4A; --steel:#2E5077; --teal:#2A9D8F;
+    --amber:#E9A23B; --purple:#7C5CBF; --red:#D5583F;
+    --bg:#F6F7F9; --card:#FFFFFF; --line:#E4E8EE; --ink:#151B26; --sub:#6B7280;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);}
+  header{background:var(--navy);color:#fff;padding:22px 32px;display:flex;align-items:center;justify-content:space-between}
+  header .brand{display:flex;align-items:center;gap:12px}
+  header .brand .mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--teal),var(--amber));display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk';font-weight:700;color:var(--navy);font-size:16px}
+  header h1{font-family:'Space Grotesk',sans-serif;font-size:19px;margin:0;font-weight:600;letter-spacing:.2px}
+  header p{margin:2px 0 0;font-size:12.5px;color:#B9C2D6}
+  .status{font-size:12px;padding:6px 12px;border-radius:20px;background:rgba(255,255,255,.08);color:#CFE9E4}
+  main{max-width:1180px;margin:0 auto;padding:28px 24px 60px;display:grid;grid-template-columns:1.05fr 1fr;gap:22px}
+  @media (max-width:920px){main{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;box-shadow:0 1px 2px rgba(20,30,50,.04)}
+  .card h2{font-family:'Space Grotesk';font-size:15.5px;margin:0 0 4px;color:var(--navy-2)}
+  .card .hint{font-size:12.5px;color:var(--sub);margin:0 0 16px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+  label{display:block;font-size:12.2px;color:var(--sub);margin-bottom:5px;font-weight:500}
+  input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:13.5px;font-family:inherit;background:#FCFCFD;color:var(--ink)}
+  input:focus,select:focus{outline:2px solid var(--teal);outline-offset:1px;border-color:var(--teal)}
+  fieldset{border:1px dashed var(--line);border-radius:10px;padding:12px 14px 14px;margin:16px 0 4px}
+  fieldset legend{font-size:12.5px;color:var(--steel);font-weight:600;padding:0 6px}
+  .toggle-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .toggle-row input{width:auto}
+  .field{margin-bottom:12px}
+  .btn{margin-top:18px;width:100%;background:var(--navy-2);color:#fff;border:none;padding:13px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Space Grotesk'}
+  .btn:hover{background:var(--navy)}
+  .btn:disabled{opacity:.55;cursor:not-allowed}
+  .result-empty{color:var(--sub);font-size:13.5px;text-align:center;padding:50px 10px}
+  .headline{display:flex;align-items:baseline;gap:10px;margin:6px 0 2px}
+  .headline .num{font-family:'Space Grotesk';font-size:42px;font-weight:700;color:var(--navy-2)}
+  .headline .unit{font-size:14px;color:var(--sub)}
+  .badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;margin-top:6px}
+  .badge.low{background:#E4F5EE;color:#1E7A5E}
+  .badge.medium{background:#FDF1DC;color:#9A6412}
+  .badge.high{background:#FBE7E3;color:#B33A22}
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+  .compare .box{background:#F8F9FB;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .compare .box .label{font-size:11.5px;color:var(--sub);text-transform:uppercase;letter-spacing:.4px}
+  .compare .box .val{font-family:'Space Grotesk';font-size:22px;font-weight:600;margin-top:2px;color:var(--navy-2)}
+  .factors{margin-top:20px}
+  .factor-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12.5px}
+  .factor-row .name{width:150px;flex-shrink:0;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .factor-bar{flex:1;height:8px;background:#EEF1F5;border-radius:5px;overflow:hidden}
+  .factor-bar > span{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--purple))}
+  .factor-row .pct{width:38px;text-align:right;color:var(--sub)}
+  .suggestion{margin-top:18px;background:#FDF7EC;border:1px solid #F1DFB8;border-radius:10px;padding:12px 14px;font-size:13px;color:#7A5A1A}
+  footer{text-align:center;color:var(--sub);font-size:11.5px;padding:20px;}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="mark">AC</div>
+    <div>
+      <h1>AutoChain AI</h1>
+      <p>Dự báo rủi ro giao hàng · Chuỗi cung ứng ô tô</p>
+    </div>
+  </div>
+  <div class="status">{{ 'Mô hình sẵn sàng' if model_ready else 'Mô hình chưa tải' }}</div>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Thông tin đơn hàng</h2>
+    <p class="hint">Nhập thông tin đơn hàng để hệ thống dự báo số ngày giao hàng có thể bị trễ.</p>
+    <form id="predict-form">
+      <div class="grid2">
+        <div class="field">
+          <label>Ngày đặt hàng</label>
+          <input type="date" name="order_date" value="{{ today }}">
+        </div>
+        <div class="field">
+          <label>Số ngày giao dự kiến</label>
+          <input type="number" name="shipping_days_scheduled" value="4" min="0" max="15">
+        </div>
+        <div class="field">
+          <label>Phương thức vận chuyển</label>
+          <select name="shipping_mode">
+            {% for v in options.shipping_mode %}<option value="{{v}}">{{v}}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Thị trường (Market)</label>
+          <select name="market">
+            {% for v in options.market %}<option value="{{v}}">{{v}}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Khu vực đơn hàng</label>
+          <select name="order_region">
+            {% for v in options.order_region %}<option value="{{v}}">{{v}}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Phân khúc khách hàng</label>
+          <select name="customer_segment">
+            {% for v in options.customer_segment %}<option value="{{v}}">{{v}}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Ngành hàng</label>
+          <select name="department_name">
+            {% for v in options.department_name %}<option value="{{v}}">{{v}}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Danh mục sản phẩm</label>
+          <select name="category_name">
+            {% for v in options.category_name %}<option value="{{v}}">{{v}}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Số lượng sản phẩm</label>
+          <input type="number" name="order_item_quantity" value="2" min="1">
+        </div>
+        <div class="field">
+          <label>Đơn giá (USD)</label>
+          <input type="number" name="product_price" value="120" min="0" step="0.01">
+        </div>
+        <div class="field">
+          <label>Giảm giá (%)</label>
+          <input type="number" name="discount_rate" value="5" min="0" max="90">
+        </div>
+        <div class="field">
+          <label>Xu hướng giao hàng gần đây tại khu vực</label>
+          <select name="trend">
+            <option value="good">Ổn định</option>
+            <option value="normal" selected>Bình thường</option>
+            <option value="bad">Đang gặp trở ngại</option>
+          </select>
+        </div>
+      </div>
+
+      <fieldset>
+        <legend>Kịch bản thiên tai (tùy chọn)</legend>
+        <div class="toggle-row">
+          <input type="checkbox" id="disaster_toggle" name="disaster_toggle">
+          <label for="disaster_toggle" style="margin:0">Khu vực đang chịu ảnh hưởng bởi thiên tai</label>
+        </div>
+        <div class="grid2" id="disaster-fields" style="display:none">
+          <div class="field">
+            <label>Mức độ nghiêm trọng (0–10)</label>
+            <input type="number" name="disaster_magnitude" value="5" min="0" max="10">
+          </div>
+          <div class="field">
+            <label>Số người bị ảnh hưởng (ước tính)</label>
+            <input type="number" name="disaster_affected" value="10000" min="0">
+          </div>
+        </div>
+      </fieldset>
+
+      <button class="btn" type="submit">Dự báo rủi ro giao hàng</button>
+    </form>
+  </section>
+
+  <section class="card" id="result-card">
+    <h2>Kết quả dự báo</h2>
+    <p class="hint">Dự báo dựa trên mô hình XGBoost (chính) và LSTM (đối chiếu).</p>
+    <div id="result-body">
+      <div class="result-empty">Điền thông tin đơn hàng và bấm “Dự báo” để xem kết quả.</div>
+    </div>
+  </section>
+</main>
+
+<footer>Đồ án tốt nghiệp · Hệ thống tích hợp AI cho dự báo rủi ro chuỗi cung ứng ô tô — bản demo phục vụ minh họa, không dùng cho quyết định vận hành thực tế.</footer>
+
+<script>
+const form = document.getElementById('predict-form');
+const disasterToggle = document.getElementById('disaster_toggle');
+const disasterFields = document.getElementById('disaster-fields');
+disasterToggle.addEventListener('change', () => {
+  disasterFields.style.display = disasterToggle.checked ? 'grid' : 'none';
+});
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = form.querySelector('button');
+  btn.disabled = true; btn.textContent = 'Đang dự báo...';
+
+  const fd = new FormData(form);
+  const payload = {};
+  fd.forEach((v, k) => { payload[k] = v; });
+  payload.disaster_toggle = disasterToggle.checked;
+
+  try {
+    const res = await fetch('/api/predict', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    renderResult(data);
+  } catch (err) {
+    document.getElementById('result-body').innerHTML =
+      '<div class="result-empty">Không thể kết nối máy chủ dự báo. Vui lòng thử lại.</div>';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Dự báo rủi ro giao hàng';
+  }
+});
+
+function renderResult(data) {
+  if (data.error) {
+    document.getElementById('result-body').innerHTML =
+      `<div class="result-empty">${data.error}</div>`;
+    return;
+  }
+  const days = data.xgboost.delay_days;
+  const lstmDays = data.lstm && data.lstm.delay_days !== undefined ? data.lstm.delay_days : null;
+
+  let html = `
+    <div class="headline"><span class="num">${days}</span><span class="unit">ngày trễ dự kiến</span></div>
+    <span class="badge ${data.risk_level}">Mức rủi ro: ${data.risk_label}</span>
+    <div class="compare">
+      <div class="box"><div class="label">XGBoost (chính)</div><div class="val">${days} ngày</div></div>
+      <div class="box"><div class="label">LSTM (đối chiếu)</div><div class="val">${lstmDays !== null ? lstmDays + ' ngày' : '—'}</div></div>
+    </div>`;
+
+  if (data.top_factors && data.top_factors.length) {
+    html += '<div class="factors"><div class="hint" style="margin-bottom:10px">Yếu tố ảnh hưởng chính đến dự báo</div>';
+    data.top_factors.forEach(f => {
+      html += `<div class="factor-row"><span class="name">${f.feature}</span>
+        <span class="factor-bar"><span style="width:${f.share}%"></span></span>
+        <span class="pct">${f.share}%</span></div>`;
+    });
+    html += '</div>';
+  }
+
+  html += `<div class="suggestion">Gợi ý: nên cộng thêm khoảng <strong>${data.safety_stock_days} ngày</strong> tồn kho an toàn cho đơn hàng / nhóm hàng tương tự để giảm ảnh hưởng của độ trễ dự báo.</div>`;
+
+  document.getElementById('result-body').innerHTML = html;
+}
+</script>
+</body>
+</html>

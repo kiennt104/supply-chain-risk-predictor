@@ -1,0 +1,248 @@
+# AutoChain AI - Dự Báo Rủi Ro Giao Hàng
+
+Hệ thống tích hợp AI cho dự báo rủi ro chuỗi cung ứng ô tô, sử dụng mô hình **XGBoost** (chính) và **LSTM** (đối chiếu).
+
+## 📋 Mô Tả
+
+Ứng dụng web cho phép dự báo số ngày giao hàng có thể bị trễ dựa trên:
+- **Thông tin đơn hàng**: phương thức vận chuyển, thị trường, khu vực, phân khúc khách hàng, ngành hàng, v.v.
+- **Lịch sử vận chuyển**: tính toán rolling window theo quốc gia
+- **Yếu tố lịch**: mùa vụ, chu kỳ tuần
+- **Rủi ro thiên tai**: nếu khu vực chịu ảnh hưởng bởi thảm họa
+
+## 🚀 Cài Đặt
+
+### Yêu Cầu
+- Python 3.8+
+- pip hoặc conda
+
+### Bước Cài Đặt
+
+1. **Clone hoặc tải project:**
+   ```bash
+   cd c:\Users\trknguyen\Documents\3.UIT\IMP!_DATN\web_app
+   ```
+
+2. **Tạo virtual environment (tùy chọn nhưng khuyên dùng):**
+   ```bash
+   python -m venv venv
+   venv\Scripts\activate
+   ```
+
+3. **Cài đặt dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Chuẩn bị mô hình:**
+   - Đặt các file mô hình trong folder `models/`:
+     - `xgboost_delay_model.pkl` (bắt buộc)
+     - `sequence_scaler.pkl` (bắt buộc nếu dùng LSTM)
+     - `lstm_delay_model.keras` (tùy chọn)
+
+## 🏃 Chạy Ứng Dụng
+
+```bash
+python app.py
+```
+
+Mở trình duyệt và truy cập: **http://127.0.0.1:5000**
+
+## 📁 Cấu Trúc Project
+
+```
+web_app/
+├── app.py                    # Flask backend
+├── templates/
+│   └── index.html           # Frontend UI
+├── models/                  # Thư mục lưu mô hình (cần tạo)
+│   ├── xgboost_delay_model.pkl
+│   ├── sequence_scaler.pkl
+│   └── lstm_delay_model.keras
+├── requirements.txt         # Dependencies
+└── README.md               # Tài liệu này
+```
+
+## 🔌 API Endpoints
+
+### GET `/`
+Trả về trang web chính với form nhập liệu và kết quả dự báo.
+
+### POST `/api/predict`
+**Payload (JSON):**
+```json
+{
+  "order_date": "2026-09-23",
+  "shipping_days_scheduled": 4,
+  "shipping_mode": "Standard Class",
+  "market": "Europe",
+  "order_region": "Western Europe",
+  "customer_segment": "Consumer",
+  "department_name": "Fan Shop",
+  "category_name": "Cleats",
+  "order_item_quantity": 2,
+  "product_price": 120,
+  "discount_rate": 5,
+  "trend": "normal",
+  "disaster_toggle": false,
+  "disaster_magnitude": 5,
+  "disaster_affected": 10000
+}
+```
+
+**Response:**
+```json
+{
+  "xgboost": {
+    "delay_days": 0.85
+  },
+  "lstm": {
+    "delay_days": 0.92
+  },
+  "risk_level": "medium",
+  "risk_label": "Trung bình",
+  "top_factors": [
+    {
+      "feature": "order_month",
+      "share": 15.3
+    }
+  ],
+  "safety_stock_days": 2.3
+}
+```
+
+## 🎨 Giao Diện Người Dùng
+
+Ứng dụng sử dụng:
+- **Design System**: Navy, Teal, Amber, Purple
+- **Typography**: Inter (body), Space Grotesk (headings)
+- **Responsive**: Hỗ trợ mobile và desktop
+
+## 📊 Các Tính Năng Chính
+
+1. **Dự báo Chính (XGBoost)**: Mô hình gradient boosting
+2. **Dự báo Đối Chiếu (LSTM)**: Mạng nơ-ron recurrent cho chuỗi thời gian
+3. **Phân Tích Yếu Tố**: Hiển thị 6 yếu tố ảnh hưởng nhất
+4. **Gợi Ý Tồn Kho An Toàn**: Tính toán buffer dựa trên dự báo
+5. **Kịch Bản Thiên Tai**: Mô phỏng rủi ro từ thảm họa
+
+## ⚙️ Cấu Hình
+
+Chỉnh sửa `app.py` để thay đổi:
+- **NUMERIC_FEATURES**: Danh sách các đặc trưng số
+- **CATEGORY_BASES**: Danh sách các đặc trưng phân loại
+- **FALLBACK_OPTIONS**: Giá trị mặc định cho dropdown
+- **RISK_PRESETS**: Cấu hình xu hướng giao hàng (good/normal/bad)
+
+## 🧪 Thử Nghiệm
+
+Chạy với mô hình mock (không cần file mô hình thực):
+- `ModelBundle` sẽ load fallback options
+- API sẽ trả về dự báo mặc định
+
+## 📝 Ghi Chú
+
+- Ứng dụng này chỉ dùng cho **minh họa/demo**, không dùng cho quyết định vận hành thực tế
+- Cần huấn luyện lại mô hình với dữ liệu mới định kỳ
+- LSTM là tùy chọn; nếu không có thể bỏ qua
+
+## 👤 Tác Giả
+
+Đồ án tốt nghiệp (DATN) - Trường Đại học Công Nghệ Thông Tin (UIT)
+
+## 📄 Giấy Phép
+
+Bản demo phục vụ minh họa
+    'Country (quốc gia) — liên kết Order với Disaster và Macroeconomic Indicators thông qua mã ISO3.',
+    'Disaster (thảm họa) — liên kết với Order theo quan hệ "xảy ra tại quốc gia X, trong khoảng thời gian có '
+    'overlap với exposure window của đơn hàng".',
+    'Time (thời gian) — trục liên kết xuyên suốt, cho phép xác định thảm họa nào "đã biết" tại order_date.',
+]
+for s in kg_items:
+    insert_para(anchor, s, bullet=True, numId=10)
+insert_para(anchor, 'Các quan hệ này được hiện thực bằng phép join theo cặp (country, year) trên DuckDB thay vì '
+            'một cơ sở dữ liệu đồ thị (graph database) chuyên dụng, do giới hạn thời gian triển khai. Việc xây '
+            'dựng một Knowledge Graph đầy đủ — với các thực thể Supplier, Warehouse, Route được biểu diễn tường '
+            'minh và truy vấn bằng ngôn ngữ đồ thị (ví dụ Cypher) — được đề xuất là hướng phát triển tiếp theo '
+            'ở Chương 6.')
+
+# ---------------------------------------------------------------
+# 3.7 Mô hình AI (XGBoost + LSTM)
+# ---------------------------------------------------------------
+anchor = find_para(doc, 'SHAP Expanability', style='List Paragraph')
+insert_para(anchor, 'Đề tài triển khai và so sánh hai mô hình cho bài toán dự báo delay_days theo hướng hồi quy '
+            '(regression): XGBoost đóng vai trò baseline trên dữ liệu dạng bảng, và LSTM đóng vai trò mô hình '
+            'chính khai thác yếu tố chuỗi thời gian.')
+insert_para(anchor, [('XGBoost Regressor: ', True)], bullet=False)
+xgb_items = [
+    'Tham số: n_estimators = 500, max_depth = 6, learning_rate = 0.05, subsample = 0.8, colsample_bytree = 0.8, '
+    'objective = reg:squarederror.',
+    'Huấn luyện trực tiếp trên 262 đặc trưng (sau one-hot), có early-stopping thông qua eval_set trên tập validation.',
+]
+for s in xgb_items:
+    insert_para(anchor, s, bullet=True, numId=10)
+insert_para(anchor, [('LSTM: ', True)], bullet=False)
+lstm_items = [
+    'Kiến trúc: 1 tầng LSTM (64 units) → Dropout (0.2) → Dense (32, ReLU) → Dense (1).',
+    'Đầu vào là chuỗi 30 bước quan sát gần nhất (sequence length = 30), mỗi bước gồm 31 đặc trưng số đã '
+    'chuẩn hoá bằng StandardScaler (fit trên tập train).',
+    'Huấn luyện với optimizer Adam, loss MSE, batch_size = 256, tối đa 20 epoch, kèm EarlyStopping '
+    '(patience = 4, khôi phục trọng số tốt nhất trên validation).',
+]
+for s in lstm_items:
+    insert_para(anchor, s, bullet=True, numId=10)
+insert_para(anchor, 'Việc lựa chọn XGBoost làm baseline dựa trên khả năng xử lý tốt dữ liệu dạng bảng với chi '
+            'phí huấn luyện thấp, trong khi LSTM được kỳ vọng khai thác thêm thông tin từ diễn biến giao hàng '
+            'theo thời gian — kết quả so sánh thực nghiệm được trình bày chi tiết ở Chương 4.')
+
+# ---------------------------------------------------------------
+# 3.8 SHAP / Explainability
+# ---------------------------------------------------------------
+anchor = find_para(doc, 'Inventory Optimization', style='List Paragraph')
+insert_para(anchor, 'Khả năng giải thích là một yêu cầu quan trọng khi triển khai mô hình dự báo rủi ro vào '
+            'thực tế, vì người quản lý chuỗi cung ứng cần biết lý do một đơn hàng được đánh giá là có nguy cơ '
+            'trễ cao trước khi ra quyết định. SHAP (SHapley Additive exPlanations) là phương pháp được đề tài '
+            'lựa chọn về mặt phương pháp luận, dựa trên lý thuyết trò chơi hợp tác để phân bổ đóng góp của từng '
+            'đặc trưng vào một dự báo cụ thể, phù hợp với các mô hình cây như XGBoost thông qua TreeExplainer.')
+insert_para(anchor, 'Trong phạm vi bản demo của đồ án, mức độ ảnh hưởng của đặc trưng được xấp xỉ bằng '
+            'feature importance dạng Gain có sẵn của XGBoost (đóng góp trung bình của mỗi đặc trưng vào việc '
+            'giảm sai số trên toàn bộ các cây quyết định), hiển thị trực tiếp trên giao diện dự báo dưới dạng '
+            'biểu đồ tỉ trọng. Đây là một xấp xỉ ở cấp độ toàn cục (global importance); việc tích hợp SHAP đầy '
+            'đủ để giải thích ở cấp độ từng dự báo (local explanation) được đề xuất là hướng phát triển tiếp '
+            'theo, khi đồ án có thêm thời gian để tối ưu chi phí tính toán của TreeExplainer trên tập dữ liệu '
+            'quy mô lớn.')
+
+# ---------------------------------------------------------------
+# 3.9 Inventory Optimization
+# ---------------------------------------------------------------
+anchor = find_para(doc, 'Quy trình hoạt động của Framework đề xuất', style='List Paragraph')
+insert_para(anchor, 'Từ số ngày trễ dự báo (delay_days), đề tài đề xuất một quy tắc đơn giản (rule-based) để '
+            'gợi ý mức tồn kho an toàn bổ sung, thay vì chỉ dừng lại ở việc đưa ra một con số dự báo:')
+insert_para(anchor, 'buffer_days = max(0, delay_days) × 1.5 + 1', bullet=True, numId=10)
+insert_para(anchor, 'Hệ số 1.5 phản ánh mức độ thận trọng (an toàn) mong muốn trước sai số dự báo, còn phần '
+            'cộng thêm 1 ngày là mức đệm tối thiểu áp dụng cho mọi đơn hàng. Đơn hàng được phân theo ba mức rủi '
+            'ro dựa trên delay_days dự báo — Thấp (< 0,5 ngày), Trung bình (0,5–1,5 ngày) và Cao (> 1,5 ngày) — '
+            'để hỗ trợ trực quan hoá và ưu tiên xử lý trên giao diện demo. Đây là một quy tắc mang tính minh '
+            'hoạ khả năng ứng dụng của dự báo vào quyết định vận hành; việc xây dựng một mô hình tối ưu hoá '
+            'tồn kho đầy đủ (ví dụ theo mô hình (s, S) hoặc Newsvendor có điều kiện theo rủi ro) được đề xuất '
+            'là hướng phát triển tiếp theo.')
+
+# ---------------------------------------------------------------
+# 3.10 Quy trình hoạt động của Framework đề xuất (end-to-end flow)
+# ---------------------------------------------------------------
+anchor = find_para(doc, 'CHƯƠNG 4: THỰC NGHIỆM VÀ ĐÁNH GIÁ', style='Normal')
+insert_para(anchor, 'Framework đề xuất hoạt động theo quy trình khép kín, từ dữ liệu đơn hàng thô đến khuyến '
+            'nghị vận hành hiển thị trên giao diện người dùng:')
+flow = [
+    'Đơn hàng mới (hoặc thông tin đơn hàng được nhập trên giao diện demo) được đưa vào Data Pipeline để sinh '
+    'đầy đủ 39 đặc trưng gốc theo đúng logic đã dùng khi huấn luyện.',
+    'Mô hình XGBoost dự báo delay_days; mô hình LSTM dự báo đối chiếu trên cùng đặc trưng số dạng chuỗi.',
+    'Feature importance (Gain-based) được trích xuất để xác định các yếu tố đóng góp chính vào dự báo.',
+    'Kết quả delay_days được ánh xạ sang mức rủi ro (Thấp/Trung bình/Cao) và mức tồn kho an toàn đề xuất.',
+    'Toàn bộ kết quả được trả về qua REST API và hiển thị trực quan trên Web Dashboard (Chương 5).',
+]
+for s in flow:
+    insert_para(anchor, s, bullet=True, numId=10)
+
+doc.save('final_thesis.docx')
+print("Chapter 3 done. Paragraph count:", len(doc.paragraphs))

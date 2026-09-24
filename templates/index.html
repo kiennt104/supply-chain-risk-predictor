@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AutoChain AI · GNN Telemetry Control Cockpit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --space-bg: #F4F6FA;
+    --glass-panel: #FFFFFF;
+    --glass-border: rgba(148, 163, 184, 0.15);
+    --glass-border-glow: rgba(16, 185, 129, 0.35);
+
+    --neon-green: #10B981;
+    --neon-teal: #0D9488;
+    --neon-amber: #EA580C;
+    --neon-pink: #DB2777;
+    --neon-red: #DC2626;
+
+    --text-primary: #1E293B;
+    --text-muted: #64748B;
+    --text-dark: #0F172A;
+
+    --font-sans: 'Plus Jakarta Sans', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--space-bg);
+    background-image:
+      radial-gradient(circle at 10% 20%, rgba(13, 148, 136, 0.05) 0%, transparent 40%),
+      radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 40px;
+  }
+
+  /* Header Cockpit */
+  header {
+    background: #FFFFFF;
+    border-bottom: 1.5px solid var(--glass-border);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+  }
+
+  header .brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  header .brand .shield-logo {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--neon-teal), var(--neon-green));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #FFFFFF;
+    font-size: 18px;
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.25);
+  }
+
+  header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--text-dark);
+  }
+
+  header p {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-top: 1px;
+  }
+
+  .status-badge {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    padding: 6px 14px;
+    border-radius: 30px;
+    color: rgba(16, 185, 129, 1);
+    letter-spacing: 0.5px;
+  }
+
+  /* Top Control Center Console */
+  .telemetry-bar {
+    background: #FFFFFF;
+    border-bottom: 1px solid var(--glass-border);
+    padding: 12px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+  }
+
+  .telemetry-lbl {
+    font-size: 12.5px;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+  }
+
+  .telemetry-lbl .pulse-dot {
+    width: 6px;
+    height: 6px;
+    background-color: var(--neon-teal);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--neon-teal);
+    animation: pulse 1.8s infinite;
+  }
+
+  .btn-telemetry {
+    background: linear-gradient(135deg, var(--neon-teal), rgba(13, 148, 136, 0.9));
+    color: #FFFFFF;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2);
+  }
+
+  .btn-telemetry:hover {
+    transform: translateY(-1.5px);
+    box-shadow: 0 6px 16px rgba(13, 148, 136, 0.3);
+    background: #0f766e;
+  }
+
+  #test-order-info {
+    font-family: var(--font-sans);
+    font-size: 11.5px;
+    background: #F8FAFC;
+    border: 1px solid var(--glass-border);
+    padding: 6px 12px;
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  /* Grid Layout Cockpit */
+  main {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 30px 40px;
+    display: grid;
+    grid-template-columns: 1fr 1.12fr;
+    gap: 30px;
+  }
+
+  @media (max-width: 1100px) {
+    main { grid-template-columns: 1fr; }
+  }
+
+  /* Glassmorphism Card Panels */
+  .control-card {
+    background: #FFFFFF;
+    border: 1.5px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow:
+      0 10px 30px -5px rgba(22, 30, 49, 0.05),
+      0 1px 3px rgba(22, 30, 49, 0.02);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .control-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--neon-teal), transparent);
+    opacity: 0.3;
+  }
+
+  .control-card:hover {
+    border-color: rgba(13, 148, 136, 0.3);
+    box-shadow:
+      0 20px 40px -8px rgba(22, 30, 49, 0.08),
+      0 1px 4px rgba(22, 30, 49, 0.02);
+  }
+
+  .control-card h2 {
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-dark);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .control-card h2 .icon-h {
+    color: var(--neon-teal);
+    font-size: 18px;
+  }
+
+  .control-card .panel-subtitle {
+    font-size: 12.5px;
+    color: #334155;
+    margin-bottom: 24px;
+    font-family: var(--font-sans);
+  }
+
+  /* Custom Forms Grid */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 20px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .form-group label {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-dark);
+    margin-bottom: 6px;
+    font-family: var(--font-sans);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .form-input {
+    background: #FFFFFF;
+    border: 1.5px solid #94A3B8;
+    border-radius: 8px;
+    color: var(--text-dark);
+    padding: 11px 14px;
+    font-size: 13.5px;
+    font-family: var(--font-sans);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    font-weight: 600;
+    width: 100%;
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: var(--neon-teal);
+    background: #FFFFFF;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+  }
+
+  select.form-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748B'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 14px;
+    padding-right: 36px;
+  }
+
+  /* Interactive Dials & Toggles */
+  .cyber-fieldset {
+    border: 1.5px solid #94A3B8;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 24px;
+    background: #F8FAFC;
+  }
+
+  .cyber-legend {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: var(--neon-amber);
+    padding: 0 10px;
+  }
+
+  .toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    cursor: pointer;
+  }
+
+  /* Custom Checkbox as Switch */
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 22px;
+  }
+
+  .switch input { opacity: 0; width: 0; height: 0; }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: #CBD5E1;
+    transition: .3s;
+    border-radius: 34px;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+  }
+
+  input:checked + .slider {
+    background-color: var(--neon-amber);
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(22px);
+  }
+
+  .toggle-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  /* Main Action Button */
+  .btn-primary-cockpit {
+    margin-top: 24px;
+    width: 100%;
+    background: linear-gradient(135deg, var(--neon-teal) 0%, var(--neon-green) 100%);
+    color: #FFFFFF;
+    border: none;
+    padding: 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+  }
+
+  .btn-primary-cockpit:hover {
+    transform: translateY(-1.5px);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+    background: linear-gradient(135deg, #0f766e 0%, #047857 100%);
+  }
+
+  .btn-primary-cockpit:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Output / Telemetry Cockpit Panel */
+  .output-empty-slate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 100px 20px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .slate-icon {
+    font-size: 42px;
+    margin-bottom: 16px;
+    opacity: 0.35;
+    animation: float 4s ease-in-out infinite;
+  }
+
+  /* GNN Custom Styles */
+  .gnn-metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .radial-metric-box {
+    background: #F8FAFC;
+    border: 1.5px solid #EFF1F5;
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.01);
+  }
+
+  .radial-lbl {
+    font-size: 11px;
+    font-family: var(--font-sans);
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    font-weight: 700;
+  }
+
+  .radial-val-huge {
+    font-family: var(--font-mono);
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--neon-teal);
+    line-height: 1;
+    margin: 12px 0 6px;
+  }
+
+  .badge-cq {
+    align-self: flex-start;
+    font-family: var(--font-sans);
+    font-size: 10.5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+
+  .badge-cq.high { background: rgba(220, 38, 38, 0.1); color: var(--neon-red); border: 1px solid rgba(220,38,38,0.15); }
+  .badge-cq.medium { background: rgba(234, 88, 12, 0.1); color: var(--neon-amber); border: 1px solid rgba(234,88,12,0.15); }
+  .badge-cq.low { background: rgba(16, 185, 129, 0.1); color: var(--neon-green); border: 1px solid rgba(16,185,129,0.15); }
+
+  /* Keyframe Animations */
+  @keyframes pulse {
+    0% { transform: scale(0.95); opacity: 0.5; box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.5); }
+    70% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 8px rgba(13, 148, 136, 0); }
+    100% { transform: scale(0.95); opacity: 0.5; box-shadow: 0 0 0 0 rgba(13, 148, 136, 0); }
+  }
+
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+  }
+
+  footer {
+    text-align: center;
+    font-family: var(--font-sans);
+    color: var(--text-muted);
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    margin-top: 40px;
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="shield-logo">Ω</div>
+    <div>
+      <h1>AutoChain Core Platform</h1>
+      <p>SPATIAL GNN TELEMETRY & DELAY PREDICTION</p>
+    </div>
+  </div>
+  <div class="status-badge">{{ '🟢 SYSTEM ACTIVE' if model_ready else '🔴 SYSTEM INITIALIZATION FAULT' }}</div>
+</header>
+
+<div class="telemetry-bar">
+  <div class="telemetry-lbl">
+    <span class="pulse-dot"></span>
+    <span>SỰ KIỆN QUY CHUẨN THỜI GIAN THỰC (REAL-TIME PIPELINE MONITOR):</span>
+    {% if test_avail %}
+      <span id="test-order-info" style="margin-left: 10px; display:none">Waiting for telemetry ingestion...</span>
+    {% else %}
+      <span style="color:var(--neon-amber)">Thông số giả lập thử nghiệm chưa kích hoạt.</span>
+    {% endif %}
+  </div>
+  {% if test_avail %}
+    <button id="btn-draw-test" class="btn-telemetry" type="button"> Ingest Live Telemetry Batch</button>
+  {% endif %}
+</div>
+
+<div id="real-disaster-bar" style="background: rgba(239, 68, 68, 0.1); border-bottom: 1.5px solid rgba(239, 68, 68, 0.2); padding: 14px 40px; display: none; gap: 20px; align-items: center; justify-content: space-between; font-size: 12px; font-family: var(--font-mono)">
+  <div id="real-disaster-text" style="color: #F87171; line-height: 1.6; flex: 1"></div>
+  <button id="btn-mirror-disaster" class="btn-telemetry" style="background: var(--neon-amber); color: var(--space-bg); font-weight: 800; box-shadow: none" type="button">MIRROR ENVIRONMENT</button>
+</div>
+
+<main>
+  <!-- Sườn Trái: Điều Khiển telemetry (Form) -->
+  <section class="control-card">
+    <h2><span class="icon-h">⚙️</span> Control Center Ingestion</h2>
+    <p class="panel-subtitle">Thiết đặt các biến biên liên kết thời gian thực của hợp đồng cung ứng và thông số lộ trình.</p>
+    
+    <form id="predict-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Ngày phát sinh yêu cầu</label>
+          <input type="date" name="order_date" class="form-input" value="{{ today }}">
+        </div>
+        <div class="form-group">
+          <label>Lead-term Cam kết hợp đồng (Days)</label>
+          <input type="number" name="shipping_days_scheduled" class="form-input" value="4" min="0" max="15">
+        </div>
+        <div class="form-group">
+          <label>Phương thức vận chuyển</label>
+          <select name="shipping_mode" class="form-input">
+            {% for v in options.shipping_mode %}<option value="{{v}}">{{v}}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Thị trường đích (Market Region)</label>
+          <select name="market" class="form-input">
+            {% for v in options.market %}<option value="{{v}}">{{v}}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Khu vực hoàn thiện</label>
+          <select name="order_region" class="form-input">
+            {% for v in options.order_region %}<option value="{{v}}">{{v}}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Mức độ ưu tiên lắp ráp (Segment)</label>
+          <select name="customer_segment" class="form-input">
+            {% for v in options.customer_segment %}<option value="{{v}}">{{v}}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Nhóm hệ thống thiết bị</label>
+          <select name="department_name" class="form-input">
+            {% for v in options.department_name %}
+              <option value="{{v}}">{% if v in automotive_map.departments %}{{ automotive_map.departments[v] }}{% else %}{{v}}{% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tên cơ cấu phụ tùng lắp ráp</label>
+          <select name="category_name" class="form-input">
+            {% for v in options.category_name %}
+              <option value="{{v}}">{% if v in automotive_map.categories %}{{ automotive_map.categories[v] }}{% else %}{{v}}{% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Số lượng kiện (Batch Qty)</label>
+          <input type="number" name="order_item_quantity" class="form-input" value="2" min="1">
+        </div>
+        <div class="form-group">
+          <label>Đơn giá trị / Linh kiện (USD)</label>
+          <input type="number" name="product_price" class="form-input" value="120" min="0" step="0.01" id="product_price_input">
+        </div>
+        <div class="form-group">
+          <label>Chiết khấu ký kết (%)</label>
+          <input type="number" name="discount_rate" class="form-input" value="5" min="0" max="90">
+        </div>
+        <div class="form-group">
+          <label>Trực quan nghẽn biên địa phương</label>
+          <select name="trend" class="form-input">
+            <option value="good">🟢 CLEAR — Luồng thông suốt, không dồn ứ</option>
+            <option value="normal" selected>🟡 NORMAL — Mật độ thông thường</option>
+            <option value="bad">🔴 WARNING — Nghẽn cảng bốc dỡ nghiêm trọng</option>
+          </select>
+        </div>
+      </div>
+
+      <fieldset class="cyber-fieldset">
+        <legend class="cyber-legend">⚡ ENVIRONMENTAL SHOCKS (THIÊN TAI / SỰ CỐ ĐỊA CHÍNH TRỊ)</legend>
+        <div class="toggle-container" style="margin-top: 5px;">
+          <label class="switch">
+            <input type="checkbox" id="disaster_toggle" name="disaster_toggle">
+            <span class="slider"></span>
+          </label>
+          <span class="toggle-label">Mô phỏng rung động thiên tai cục bộ</span>
+        </div>
+        <div class="form-grid" id="disaster-fields" style="display:none; transition: all 0.3s ease;">
+          <div class="form-group">
+            <label>Mức độ bão / Động đất (EM-DAT Mag)</label>
+            <input type="number" name="disaster_magnitude" class="form-input" value="5" min="0" max="1000" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>Số nhân công bị cô lập trực tiếp</label>
+            <input type="number" name="disaster_affected" class="form-input" value="10000" min="0">
+          </div>
+          <div class="form-group">
+            <label>Tử vong hạ tầng ghi nhận</label>
+            <input type="number" name="disaster_deaths" class="form-input" value="0" min="0">
+          </div>
+        </div>
+      </fieldset>
+
+      <button class="btn-primary-cockpit" type="submit">⚡ RUN REAL-TIME PREDICTOR PIPELINE</button>
+    </form>
+  </section>
+
+  <!-- Sườn Phải: Dashboard Hiển thị và Đồ thị GNN (Output) -->
+  <section class="control-card" id="result-card">
+    <h2><span class="icon-h">🔮</span> Telemetry Dashboard Output</h2>
+    <p class="panel-subtitle">Dự báo đồng thời qua mạng nơ-ron hồi quy LSTM tuần tự kết hợp XGBoost rừng phân nhánh.</p>
+    <div id="result-body">
+      <div class="output-empty-slate">
+        <div class="slate-icon">⚡</div>
+        <h3 style="font-size:15px; font-weight:600; text-transform:uppercase; margin-bottom:8px">Hệ thống đang rảnh rỗi</h3>
+        <p style="font-size:12px; color:var(--text-muted)">Cung cấp tham số ở sườn điều điều hiển hoặc nhấn Ingest Live Telemetry phía trên để xem trực quan hóa đồ thị GNN.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>HỒ SƠ KHÓA LUẬN TỐT NGHIỆP THUYẾT MINH CHUỖI CUNG ỨNG Ô TÔ - ĐẠI HỌC CÔNG NGHỆ THÔNG TIN UIT</footer>
+
+<script>
+const form = document.getElementById('predict-form');
+const disasterToggle = document.getElementById('disaster_toggle');
+const disasterFields = document.getElementById('disaster-fields');
+const btnDrawTest = document.getElementById('btn-draw-test');
+const testOrderInfo = document.getElementById('test-order-info');
+const realDisasterBar = document.getElementById('real-disaster-bar');
+const realDisasterText = document.getElementById('real-disaster-text');
+const btnMirrorDisaster = document.getElementById('btn-mirror-disaster');
+
+// Lưu trữ dữ liệu chuỗi thời gian thực nếu có load từ file test
+let activeTestData = null;
+
+if (btnDrawTest) {
+  btnDrawTest.addEventListener('click', async () => {
+    btnDrawTest.disabled = true;
+    btnDrawTest.textContent = 'Ingesting Telemetry...';
+    try {
+      const res = await fetch('/api/random-test-order');
+      const result = await res.json();
+      if (result.success) {
+        const order = result.data;
+        activeTestData = order; // Lưu vào biến toàn cục của JS để lát submit truyền lên API
+        
+        // Điền dữ liệu vào form
+        form.querySelector('[name="order_date"]').value = order.order_date;
+        form.querySelector('[name="shipping_days_scheduled"]').value = order.shipping_days_scheduled;
+        form.querySelector('[name="shipping_mode"]').value = order.shipping_mode;
+        form.querySelector('[name="market"]').value = order.market;
+        form.querySelector('[name="order_region"]').value = order.order_region;
+        form.querySelector('[name="customer_segment"]').value = order.customer_segment;
+        form.querySelector('[name="department_name"]').value = order.department_name;
+        form.querySelector('[name="category_name"]').value = order.category_name;
+        form.querySelector('[name="order_item_quantity"]').value = order.order_item_quantity;
+        form.querySelector('[name="product_price"]').value = Number(order.product_price).toFixed(2);
+        form.querySelector('[name="discount_rate"]').value = order.discount_rate;
+        
+        // Quản lý trạng thái Thiên tai
+        const hasDisaster = order.disaster_exposed_real > 0 || order.active_disaster_count_real > 0;
+        disasterToggle.checked = hasDisaster;
+        disasterFields.style.display = hasDisaster ? 'grid' : 'none';
+
+        if (hasDisaster) {
+          form.querySelector('[name="disaster_magnitude"]').value = order.current_max_disaster_magnitude_real || 5;
+          form.querySelector('[name="disaster_affected"]').value = order.current_max_affected_real || 10000;
+          form.querySelector('[name="disaster_deaths"]').value = order.current_max_deaths_real || 0;
+        }
+
+        // Hiện thanh thanh tin thiên tai thực tế để người dùng đối chiếu / giả lập lại y hệt
+        if (hasDisaster) {
+          realDisasterBar.style.display = 'flex';
+          const mag = order.current_max_disaster_magnitude_real || 0;
+          const affected = order.current_max_affected_real || 0;
+          const deaths = order.current_max_deaths_real || 0;
+          const activeCount = order.active_disaster_count_real || 0;
+          const knownCount = order.known_disaster_count_real || 0;
+          const custLoc = order.customer_disaster_country_real || '—';
+          const suppLoc = order.supplier_disaster_country_real || '—';
+          const start = order.exposure_start_real ? order.exposure_start_real.split(' ')[0] : '—';
+          const end = order.exposure_end_real ? order.exposure_end_real.split(' ')[0] : '—';
+          realDisasterText.innerHTML = `☄️ <strong>THIÊN TAI THỰC TẾ:</strong> ${activeCount} sự kiện bão lũ đang diễn ra · Chỉ số EM-DAT: <strong>${mag} Mgn</strong> · Ảnh hưởng: <strong>${affected.toLocaleString()} người</strong> · Địa bàn nhà cung cấp: <strong>${suppLoc}</strong>. Thời gian kéo dài: <strong>${start}</strong> → <strong>${end}</strong>`;
+        } else {
+          realDisasterBar.style.display = 'none';
+          realDisasterText.innerHTML = '';
+        }
+
+        // Hiện thanh thông tin real status để đối chiếu lúc demo
+        testOrderInfo.style.display = 'inline';
+        const formattedRealPrice = Number(order.auto_unit_price).toLocaleString();
+        const formattedRealTotal = Number(order.auto_total_value).toLocaleString();
+        testOrderInfo.innerHTML = `Đơn hàng: <strong>#Auto-${order.order_id_real}</strong> · Sản phẩm ô tô: <strong>${order.product_name_real}</strong> (${order.pack_type}) · Quy chuẩn thương mại: <strong>${order.auto_qty} ${order.qty_unit}</strong> · Tổng giá trị lô hàng: <strong>$${formattedRealTotal}</strong> · Thực tế: giao <strong>${order.shipping_days_real} ngày</strong> (${order.delay_days_real > 0 ? 'TRỄ ' + order.delay_days_real + ' ngày' : 'ĐÚNG HẠN'})`;
+        
+        // Đánh dấu dòng trễ
+        if (order.delay_days_real > 0) {
+          testOrderInfo.style.color = '#F59E0B'; // Vàng neon
+        } else {
+          testOrderInfo.style.color = '#10B981'; // Xanh lá mát mắt
+        }
+      } else {
+        alert(result.message);
+      }
+    } catch (err) {
+      alert('Lỗi khi tải đơn hàng: ' + err.message);
+    } finally {
+      btnDrawTest.disabled = false;
+      btnDrawTest.textContent = '🧬 Ingest Live Telemetry Batch';
+    }
+  });
+}
+
+disasterToggle.addEventListener('change', () => {
+  disasterFields.style.display = disasterToggle.checked ? 'grid' : 'none';
+});
+
+if (btnMirrorDisaster) {
+  btnMirrorDisaster.addEventListener('click', () => {
+    if (!activeTestData) return;
+    disasterToggle.checked = true;
+    disasterFields.style.display = 'grid';
+    form.querySelector('[name="disaster_magnitude"]').value = activeTestData.current_max_disaster_magnitude_real || 5;
+    form.querySelector('[name="disaster_affected"]').value = activeTestData.current_max_affected_real || 10000;
+    form.querySelector('[name="disaster_deaths"]').value = activeTestData.current_max_deaths_real || 0;
+    btnMirrorDisaster.textContent = '✓ ENVIRONMENT SYNCED';
+    setTimeout(() => { btnMirrorDisaster.textContent = 'MIRROR ENVIRONMENT'; }, 1800);
+  });
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = form.querySelector('button');
+  btn.disabled = true; btn.textContent = 'INGESTING FEATURE MATRICES...';
+
+  const fd = new FormData(form);
+  const payload = {};
+  fd.forEach((v, k) => { payload[k] = v; });
+  payload.disaster_toggle = disasterToggle.checked;
+
+  // Nếu trước đó đang chọn hàng mẫu, dán các rolling features thực tế của hàng mẫu vào payload
+  if (activeTestData) {
+    const keysToCopy = [
+      'avg_delay_1d', 'avg_delay_2d', 'avg_delay_3d', 'avg_delay_5d',
+      'late_rate_1d', 'late_rate_2d', 'late_rate_3d', 'late_rate_5d',
+      'order_volume_1d', 'order_volume_2d', 'order_volume_3d', 'order_volume_5d',
+      'active_disaster_count_real', 'known_disaster_count_real'
+    ];
+    keysToCopy.forEach(k => {
+      payload[k] = activeTestData[k];
+    });
+  }
+
+  try {
+    const res = await fetch('/api/predict', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    renderResult(data);
+  } catch (err) {
+    document.getElementById('result-body').innerHTML =
+      '<div class="output-empty-slate">Không thể kết nối máy chủ dự báo. Vui lòng thử lại.</div>';
+  } finally {
+    btn.disabled = false; btn.textContent = '⚡ RUN REAL-TIME PREDICTOR PIPELINE';
+  }
+});
+
+function renderResult(data) {
+  if (data.error) {
+    document.getElementById('result-body').innerHTML =
+      `<div class="output-empty-slate">${data.error}</div>`;
+    return;
+  }
+  const days = data.xgboost.delay_days;
+  const lstmDays = data.lstm && data.lstm.delay_days !== undefined ? data.lstm.delay_days : null;
+
+  // Câu văn diễn giải dễ hiểu bằng ngôn ngữ tự nhiên
+  let summarySentence;
+  if (days <= 0) {
+    summarySentence = `✅ <strong>DÒNG CHẢY AN TOÀN:</strong> AI phân tích chu kỳ dự báo cho thấy mọi đặc trưng đều lý tưởng. Hệ thống <strong>giao hàng chính xác tuyệt đối đúng cam kết</strong>, độ bất định xấp xỉ 0%.`;
+  } else if (days < 1) {
+    summarySentence = `🟡 <strong>TRỄ BIÊN NHẸ:</strong> Có rủi ro dao động biên độ nhỏ trong thời hạn bàn giao, thời gian kéo dài <strong>dưới 24 giờ</strong>.`;
+  } else {
+    summarySentence = `⚠️ <strong>CẢNH BÁO TẮC NGHẼN:</strong> Hệ thống dự liệu tiến trình lắp ráp và kho bãi sẽ gặp ách tắc nghiêm trọng. Điểm nhận hàng có khả năng <strong>trễ giao hàng trong khoảng ${days} ngày</strong>.`;
+  }
+
+  let html = `
+    <div style="background: rgba(255, 255, 255, 0.9); border: 1.5px solid #CBD5E1; border-radius: 12px; padding: 16px; margin-bottom: 20px; font-size: 13px; line-height: 1.6; color:#0F172A">
+      ${summarySentence}
+    </div>
+  `;
+
+  // Thêm khu vực hiển thị Thông số Thương mại Ô tô đã được Ánh xạ (Auto Commercial Metrics)
+  if (data.auto_metrics) {
+    const autom = data.auto_metrics;
+    html += `
+      <div style="background: rgba(13, 148, 136, 0.04); border: 1.5px solid #CBD5E1; border-radius: 12px; padding: 18px; margin-bottom: 20px; font-size: 13px; line-height: 1.6; color:#1E293B">
+        <div style="font-weight:800; color:var(--neon-teal); margin-bottom:12px; font-family:var(--font-sans); font-size:12px; display:flex; align-items:center; gap:8px; letter-spacing:0.5px; text-transform: uppercase;">
+          <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--neon-teal)"></span>
+          📦 THỐNG SỐ KHẾ ƯỚC THƯƠNG MẠI (AUTOMOTIVE OEM CONSTRAINTS)
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px 16px">
+          <div>• Phụ tùng ánh xạ: <strong style="color:var(--neon-teal); font-weight: 700">${data.mapped_category || 'Thiếu liên kết'}</strong></div>
+          <div>• Nhóm hệ thống: <strong style="color:#0F172A; font-weight: 700">${data.mapped_department || 'Thiếu liên kết'}</strong></div>
+          <div>• Chuẩn bao bì vỏ: <strong style="color:#0F172A; font-weight: 700">${autom.pack_type}</strong></div>
+          <div>• Dung lượng cấp: <strong style="color:#0F172A; font-weight: 700">${autom.auto_qty} ${autom.qty_unit}</strong></div>
+          <div>• Đơn giá lô chuẩn: <strong style="color:#047857; font-weight: 700">$${Number(autom.auto_unit_price).toLocaleString()}</strong></div>
+          <div>• Tổng giá trị: <strong style="color:var(--neon-teal); font-weight: 700">$${Number(autom.auto_total_value).toLocaleString()}</strong></div>
+          <div style="grid-column: 1 / -1; border-top: 1.5px solid #E2E8F0; padding-top: 10px; margin-top: 8px; font-family: var(--font-sans); font-size: 11.5px; color:#475569">
+            ⚡ <strong>PHÂN HẠNG HỢP ĐỒNG:</strong> <span style="color:var(--neon-amber); font-weight: 800">${autom.contract_type}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Kết quả ngày trễ dự báo chi tiết
+  html += `
+    <div class="gnn-metrics-grid">
+      <div class="radial-metric-box" style="background: rgba(6, 182, 212, 0.02)">
+        <span class="radial-lbl">XGBOOST DỰ BÁO CHÍNH</span>
+        <span class="radial-val-huge" style="color:var(--neon-teal)">${days} <span style="font-size:14px; font-weight:normal; color:var(--text-muted)">days</span></span>
+        <span class="badge-cq ${data.risk_level === 'high' ? 'high' : (data.risk_level === 'medium' ? 'medium' : 'low')}">${data.risk_label.toUpperCase()} RISK</span>
+      </div>
+      <div class="radial-metric-box" style="background: rgba(236, 72, 153, 0.02)">
+        <span class="radial-lbl">LSTM SERIES ĐỐI CHIẾU</span>
+        <span class="radial-val-huge" style="color:var(--neon-pink)">${lstmDays !== null ? lstmDays : '—'} <span style="font-size:14px; font-weight:normal; color:var(--text-muted)">days</span></span>
+        <span class="badge-cq" style="background:rgba(255,255,255,0.05); color:var(--text-muted); border:1px solid var(--glass-border)">RECURRENT EVAL</span>
+      </div>
+    </div>
+  `;
+
+  // Nếu đang dùng đơn hàng thật (test dataset), so sánh dự báo AI với kết quả thực tế
+  if (activeTestData && activeTestData.delay_days_real !== undefined) {
+    const realDelay = activeTestData.delay_days_real;
+    const diff = Math.abs(days - realDelay);
+    const isMatch = diff <= 1; // sai lệch trong vòng 1 ngày được xem là "gần đúng"
+    html += `
+      <div style="margin-top:20px; padding:14px 16px; border-radius:12px; font-size:12.5px; line-height:1.6; ${isMatch ? 'background:rgba(16, 185, 129, 0.08); border:1.5px solid rgba(16, 185, 129, 0.4); color:#065F46' : 'background:rgba(239, 68, 68, 0.08); border:1.5px solid rgba(239, 68, 68, 0.4); color:#991B1B'}">
+        <strong>${isMatch ? '✓ KIỂM ĐỊNH THỰC TẾ (TELEMETRY ACCURACY):' : '✗ KIỂM ĐỊNH LỆCH BIÊN (TELEMETRY DISCREPANCY):'}</strong> Đơn hàng ô tô thực tế đã ghi nhận mức trễ là <strong>${realDelay} ngày</strong>.
+        Hệ thống AI ước lượng <strong>${days} ngày</strong> (Độ lệch chuẩn: <strong>${diff.toFixed(1)} ngày</strong>) — 
+        ${isMatch ? '<span style="color:#047857; font-weight:700">🎯 Chế độ dự toán hoạt động chính xác xuất sắc!</span>' : '<span style="color:#B45309; font-weight:700">⚠️ Phát sinh sai lệch ngẫu nhiên.</span>'}
+      </div>
+    `;
+  }
+
+  if (data.top_factors && data.top_factors.length) {
+    html += `
+      <div style="margin-top:24px;">
+        <div style="font-family:var(--font-sans); font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-dark); margin-bottom:12px; letter-spacing:0.5px">🔍 TRỌNG SỐ BIẾN CẤP QUYẾT ĐỊNH (GNN ATTENTION WEIGHTS)</div>
+    `;
+    data.top_factors.forEach(f => {
+      html += `
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; font-size:12px">
+          <span style="color:var(--text-primary); font-weight:600">${f.feature}</span>
+          <div style="flex:1; height:6px; background:#E2E8F0; border-radius:10px; margin:0 15px; overflow:hidden">
+            <span style="display:block; height:100%; width:${f.share}%; background:linear-gradient(90deg, var(--neon-teal), var(--neon-green)); border-radius:10px"></span>
+          </div>
+          <span style="font-family:var(--font-mono); color:var(--neon-teal); font-weight:700; width:35px; text-align:right">${f.share}%</span>
+        </div>
+      `;
+    });
+    html += '</div>';
+  }
+
+  html += `
+    <div style="margin-top:22px; background:rgba(217, 119, 6, 0.08); border:1.5px solid rgba(217, 119, 6, 0.3); border-radius:12px; padding:14px; font-size:12.5px; color:#78350F; line-height:1.5">
+      💡 <strong>QUYẾT ĐỊNH ĐIỀU PHỐI OEM (MRP MITIGATION):</strong> Khuyến nghị duy trì mức **TỒN KHO AN TOÀN (SAFETY STOCK) thêm ${data.safety_stock_days} ngày** sản xuất đối với dòng linh kiện này để ngăn chặn triệt để đứt gãy dây chuyền chính.
+    </div>
+  `;
+
+  // ĐỀ XUẤT: Sơ đồ trực quan hóa Chuỗi Cung ứng (GNN Interactive Network Graph)
+  const isDisrupted = data.risk_level === 'high' || (activeTestData && activeTestData.disaster_exposed_real > 0);
+  const m = activeTestData || {};
+  const supplierCountry = m.supplier_disaster_country_real || 'PRT';
+  const customerCountry = m.customer_disaster_country_real || 'USA';
+  const orderRegion = form.querySelector('[name="order_region"]').value;
+  const shippingMode = form.querySelector('[name="shipping_mode"]').value;
+  const custSegment = form.querySelector('[name="customer_segment"]').value;
+  const categoryMapped = data.mapped_category || 'Cùm phanh đĩa hiệu năng cao';
+  const departmentMapped = data.mapped_department || 'Cơ cấu Truyền phanh & Thủy lực';
+  const disasterMag = m.current_max_disaster_magnitude_real || (isDisrupted ? 8.5 : 0);
+  const disasterAffected = m.current_max_affected_real || (isDisrupted ? 15000 : 0);
+
+  html += `
+    <div class="sc-graph-container" style="margin-top:20px; border:1.5px solid #94A3B8; border-radius:12px; overflow:hidden; background:#0F192C">
+      <div class="sc-graph-header" style="background:#1E293B; color:#fff; padding:12px 16px; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #334155">
+        <span style="font-family:var(--font-sans); letter-spacing:0.5px">⛓️ ĐỒ THỊ LIÊN KẾT KHÔNG GIAN GNN (SPATIAL-TEMPORAL SUPPLY GRAPH)</span>
+        <span style="font-size:11px; font-weight:700; background:var(--neon-teal); color:#fff; padding:3px 10px; border-radius:30px; text-transform:uppercase">Tương tác 3D Canvas</span>
+      </div>
+      <div>
+        <canvas id="gnnCanvas" width="540" height="280" style="width:100%; height:280px; display:block"></canvas>
+      </div>
+      <div class="gnn-inspector" style="background:#1E293B; color:#ECEFF4; padding:14px 16px; border-top:1px solid #334155; font-size:12.5px; border-bottom-left-radius:12px; border-bottom-right-radius:12px; line-height:1.5">
+        <div style="font-weight:700; font-family:var(--font-sans); color:var(--neon-teal); margin-bottom:4px; display:flex; align-items:center; gap:6px" id="node-inspector-title">
+          <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--neon-teal)"></span>
+          BẤM VÀO MỘT NODE TRÊN ĐỒ THỊ ĐỂ KIỂM TRA THÔNG SỐ KHÔNG GIAN
+        </div>
+        <div id="node-inspector-desc" style="color:#B9C2D6; font-size:11.5px">
+          Sơ đồ đang biểu diễn dòng chảy phụ tùng ô tô từ nhà máy nguồn Tier-2 đi qua tuyến Logistics toàn cầu trực tiếp đến Đại lý ráp OEM.
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('result-body').innerHTML = html;
+
+  // Khởi tạo hoạt họa GNN Canvas ngay sau khi render xong HTML
+  setTimeout(() => {
+    initGnnCanvas({
+      isDisrupted: isDisrupted,
+      riskLevel: data.risk_level,
+      delayDays: days,
+      lstmDays: lstmDays,
+      supplierCountry: supplierCountry,
+      customerCountry: customerCountry,
+      orderRegion: orderRegion,
+      shippingMode: shippingMode,
+      custSegment: custSegment,
+      categoryMapped: categoryMapped,
+      departmentMapped: departmentMapped,
+      disasterMag: disasterMag,
+      disasterAffected: disasterAffected,
+      topFactors: data.top_factors || []
+    });
+  }, 50);
+}
+
+// Hàm khởi tạo và chạy hoạt họa đồ thị không gian GNN
+function initGnnCanvas(params) {
+  const canvas = document.getElementById('gnnCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  // Tinh chỉnh độ phân giải cho võng mạc (Retina Displays)
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  
+  const width = rect.width;
+  const height = rect.height;
+
+  // Khai báo cấu trúc các Node (Tọa độ cân đối trên mặt phẳng GNN)
+  const nodes = [
+    {
+      id: 'tier2',
+      label: '1. Tier-2 Sourcing',
+      icon: '🏭',
+      x: 75,
+      y: 70,
+      desc: 'Nguồn cung linh kiện gốc',
+      details: `📍 Quốc gia: <strong>${params.supplierCountry}</strong><br>🧱 Mặt hàng: <strong style="color:#E9A23B">${params.categoryMapped}</strong><br>🏷️ Nhóm hệ thống: <strong>${params.departmentMapped}</strong><br>⛈️ Thiên tai chịu ảnh hưởng: <strong>${params.isDisrupted ? 'CÓ (Mức độ ' + params.disasterMag + ' Mgn)' : 'Không có'}</strong>`,
+      status: params.isDisrupted ? 'disrupted' : 'good'
+    },
+    {
+      id: 'tier1',
+      label: '2. Tier-1 Sub-Assembly',
+      icon: '🔧',
+      x: 235,
+      y: 70,
+      desc: 'Trung tâm tích hợp chi tiết máy',
+      details: `⚙️ Kiểm định chất lượng: <strong>Đạt tiêu chuẩn QS-9000</strong><br>📦 Trạng thái đóng gói: <strong>Đang hoàn thiện cơ cấu cụm phụ tùng</strong><br>⏱️ Thời gian lắp ráp bình quân: <strong>1.2 ngày</strong>`,
+      status: 'good'
+    },
+    {
+      id: 'logistics',
+      label: '3. Logistics Transit',
+      icon: '🚢',
+      x: 395,
+      y: 70,
+      desc: 'Tuyến vận chuyển liên quốc gia',
+      details: `⚓ Hình thức vận chuyển: <strong>${params.shippingMode}</strong><br>📦 Cửa ngõ phân phối chính: <strong>${params.orderRegion}</strong><br>⚠️ Sức gió & Thời tiết tuyến biển: <strong>${params.isDisrupted ? 'Cường lưu bão bùng phát' : 'Thuận gió xuôi chèo'}</strong>`,
+      status: params.isDisrupted ? 'warning' : 'good'
+    },
+    {
+      id: 'oem_plant',
+      label: '4. OEM Assembly',
+      icon: '⚙️',
+      x: 395,
+      y: 200,
+      desc: 'Nhà máy lắp ráp ô tô trung tâm',
+      details: `📍 Trạm hoàn thiện: <strong>Khu vực Đông Nam Á / EU OEM</strong><br>📊 Tỷ lệ tồn kho dây chuyền: <strong>${params.isDisrupted ? 'Rất thấp (Dưới ngưỡng an toàn)' : 'Ổn định (5 ngày)'}</strong><br>📈 Trễ trung bình rolling 1D: <strong>${(params.delayDays * 0.4).toFixed(1)} ngày</strong>`,
+      status: params.riskLevel === 'high' ? 'disrupted' : (params.riskLevel === 'medium' ? 'warning' : 'good')
+    },
+    {
+      id: 'gnn_engine',
+      label: '🧠 GNN Feature Engine',
+      icon: '🧬',
+      x: 235,
+      y: 135,
+      desc: 'Mạng nơ-ron tích hợp đồ thị AI',
+      details: `🤖 Thuật toán học máy: <strong>XGBoost + LSTM Concurrent Ensemble</strong><br>🔮 Dự báo độ trễ: <strong style="color:var(--amber)">${params.delayDays} ngày</strong> (LSTM: <strong>${params.lstmDays || '—'} ngày</strong>)<br>🔱 Các feature chi phối chính: <br>${params.topFactors.map(f => ` - <i>${f.feature} (${f.share}%)</i>`).join('<br>')}`,
+      status: 'ai'
+    },
+    {
+      id: 'dealers',
+      label: '5. Dealer / assembly',
+      icon: '🎯',
+      x: 75,
+      y: 200,
+      desc: 'Phân phối đại lý & Khách hàng',
+      details: `🚘 Khách hàng mục tiêu: <strong>${params.custSegment}</strong><br>🛡️ Mức độ rủi ro chuỗi: <strong style="text-transform:uppercase">${params.riskLevel}</strong><br>📦 Đề xuất Kho an toàn: <strong style="color:var(--teal)">${Math.ceil(params.delayDays * 1.5 + 1)} ngày sản xuất</strong>`,
+      status: params.riskLevel === 'high' ? 'disrupted' : (params.riskLevel === 'medium' ? 'warning' : 'good')
+    }
+  ];
+
+  // Các kết nối không gian (Directed Links) đại diện thực tế logistics
+  const physicalLinks = [
+    { from: 'tier2', to: 'tier1' },
+    { from: 'tier1', to: 'logistics' },
+    { from: 'logistics', to: 'oem_plant' },
+    { from: 'oem_plant', to: 'dealers' }
+  ];
+
+  // Các liên kết nơ-ron tiềm ẩn (GNN Latent embeddings) thu thập thông tin từ tất cả tác nhân chuỗi
+  const latentLinks = [
+    { from: 'tier2', to: 'gnn_engine' },
+    { from: 'tier1', to: 'gnn_engine' },
+    { from: 'logistics', to: 'gnn_engine' },
+    { from: 'oem_plant', to: 'gnn_engine' },
+    { from: 'dealers', to: 'gnn_engine' }
+  ];
+
+  // Quản lý các hạt chuyển động (Flowing electron pulses)
+  const particles = [];
+  physicalLinks.forEach((link, idx) => {
+    // Tạo 3 hạt chuyển động lệch pha nhau dọc tuyến
+    for (let i = 0; i < 3; i++) {
+      particles.push({
+        link: link,
+        pct: i / 3,
+        speed: 0.007 + Math.random() * 0.003
+      });
+    }
+  });
+
+  // Hạt xung nơ-ron hướng vào GNN Engine
+  const aiParticles = [];
+  latentLinks.forEach(link => {
+    aiParticles.push({
+      link: link,
+      pct: Math.random(),
+      speed: 0.012
+    });
+  });
+
+  let selectedNode = null;
+  let hoveredNode = null;
+  let frameId = null;
+  let pulseTimer = 0;
+
+  // Chọn hiển thị mặc định khi mở là GNN Engine hoặc Node gặp lỗi
+  selectedNode = nodes.find(n => n.id === 'gnn_engine');
+  displayInspector(selectedNode);
+
+  function draw() {
+    ctx.clearRect(0, 0, width, height);
+    pulseTimer += 0.05;
+
+    // 1. Vẽ các liên kết nơ-ron nạp thông tin GNN tiềm ẩn (Nền mờ)
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 6]);
+    ctx.strokeStyle = 'rgba(42, 157, 143, 0.25)'; // Màu teal mờ
+    latentLinks.forEach(link => {
+      const fromNode = nodes.find(n => n.id === link.from);
+      const toNode = nodes.find(n => n.id === link.to);
+      ctx.beginPath();
+      ctx.moveTo(fromNode.x, fromNode.y);
+      ctx.lineTo(toNode.x, toNode.y);
+      ctx.stroke();
+    });
+    ctx.setLineDash([]); // Reset line dash
+
+    // Dự phòng hiển thị hạt AI đi vào GNN
+    aiParticles.forEach(p => {
+      p.pct += p.speed;
+      if (p.pct > 1) p.pct = 0;
+      const fromNode = nodes.find(n => n.id === p.link.from);
+      const toNode = nodes.find(n => n.id === p.link.to);
+      
+      const px = fromNode.x + (toNode.x - fromNode.x) * p.pct;
+      const py = fromNode.y + (toNode.y - fromNode.y) * p.pct;
+      
+      ctx.fillStyle = 'rgba(42, 157, 143, 0.6)';
+      ctx.beginPath();
+      ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // 2. Vẽ liên kết vật lý (Luồng sản xuất)
+    ctx.lineWidth = 3.5;
+    physicalLinks.forEach(link => {
+      const fromNode = nodes.find(n => n.id === link.from);
+      const toNode = nodes.find(n => n.id === link.to);
+      
+      // Chọn màu liên kết tùy biến mức độ rủi ro hệ thống
+      if (params.riskLevel === 'high') {
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.45)'; // Đỏ cảnh báo dày mờ (neon-red)
+      } else if (params.riskLevel === 'medium') {
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)'; // Vàng mờ (neon-amber)
+      } else {
+        ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)'; // Teal mờ (neon-green)
+      }
+      ctx.beginPath();
+      ctx.moveTo(fromNode.x, fromNode.y);
+      ctx.lineTo(toNode.x, toNode.y);
+      ctx.stroke();
+    });
+
+    // 3. Đưa các hạt dòng điện chuyển động nhịp nhàng (Production Flow Lines)
+    particles.forEach(p => {
+      p.pct += p.speed;
+      if (p.pct > 1) p.pct = 0;
+      
+      const fromNode = nodes.find(n => n.id === p.link.from);
+      const toNode = nodes.find(n => n.id === p.link.to);
+      
+      const px = fromNode.x + (toNode.x - fromNode.x) * p.pct;
+      const py = fromNode.y + (toNode.y - fromNode.y) * p.pct;
+
+      // Hạt tỏa sáng (glowing point)
+      ctx.beginPath();
+      if (params.riskLevel === 'high') {
+        ctx.fillStyle = '#EF4444'; // đỏ rực rỡ (neon-red)
+        ctx.arc(px, py, 4.5, 0, Math.PI * 2);
+      } else if (params.riskLevel === 'medium') {
+        ctx.fillStyle = '#F59E0B'; // (neon-amber)
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
+      } else {
+        ctx.fillStyle = '#10B981'; // xanh lá mát mắt (neon-green)
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
+      }
+      ctx.fill();
+    });
+
+    // 4. Vẽ các Node
+    nodes.forEach(node => {
+      const isHovered = (hoveredNode && hoveredNode.id === node.id);
+      const isSelected = (selectedNode && selectedNode.id === node.id);
+      
+      // Hiệu ứng lan truyền sóng xung động trên node thiên tai hoặc node bị nghẽn
+      if (node.status === 'disrupted') {
+        const ringRadius = 22 + Math.sin(pulseTimer * 2.5) * 8;
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, ringRadius, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (node.status === 'warning') {
+        const ringRadius = 20 + Math.sin(pulseTimer * 1.8) * 5;
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, ringRadius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Vòng tròn bao của node
+      let nodeBg = '#1B2A4A';
+      let borderCol = 'rgba(255,255,255,0.15)';
+      
+      if (node.status === 'disrupted') {
+        nodeBg = '#3D1B16';
+        borderCol = '#EF4444';
+      } else if (node.status === 'warning') {
+        nodeBg = '#3D2F1B';
+        borderCol = '#F59E0B';
+      } else if (node.status === 'ai') {
+        nodeBg = '#0B3F37';
+        borderCol = '#06B6D4';
+      }
+
+      if (isHovered || isSelected) {
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = node.status === 'ai' ? '#06B6D4' : (node.status === 'disrupted' ? '#F87171' : '#FBBF24');
+      } else {
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = borderCol;
+      }
+
+      // Màu nền thân Node
+      ctx.fillStyle = nodeBg;
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, 18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Vẽ Icon dạng text
+      ctx.fillStyle = '#FFF';
+      ctx.font = '14px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(node.icon, node.x, node.y + 0.5);
+
+      // Nhãn chữ tên Node
+      ctx.font = isSelected ? 'bold 11px Plus Jakarta Sans' : '10.5px Plus Jakarta Sans';
+      ctx.fillStyle = isSelected ? '#FFFFFF' : '#94A3B8';
+      ctx.fillText(node.label, node.x, node.y + 31);
+    });
+
+    frameId = requestAnimationFrame(draw);
+  }
+
+  function displayInspector(node) {
+    if (!node) return;
+    const titleEl = document.getElementById('node-inspector-title');
+    const descEl = document.getElementById('node-inspector-desc');
+    if (titleEl && descEl) {
+      let statusColor = '#06B6D4'; // cyan
+      if (node.status === 'disrupted') statusColor = '#EF4444';
+      if (node.status === 'warning') statusColor = '#F59E0B';
+      
+      titleEl.innerHTML = `
+        <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${statusColor}; box-shadow: 0 0 10px ${statusColor}"></span>
+        ${node.label.toUpperCase()} (${node.desc})
+      `;
+      descEl.innerHTML = node.details;
+    }
+  }
+
+  // Bắt sự kiện Click / Hover trên Canvas
+  function getNodeAtCoords(mx, my) {
+    for (let node of nodes) {
+      const dist = Math.hypot(node.x - mx, node.y - my);
+      if (dist <= 25) return node;
+    }
+    return null;
+  }
+
+  canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    
+    const node = getNodeAtCoords(mx, my);
+    if (node !== hoveredNode) {
+      hoveredNode = node;
+      canvas.style.cursor = node ? 'pointer' : 'default';
+    }
+  });
+
+  canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    
+    const node = getNodeAtCoords(mx, my);
+    if (node) {
+      selectedNode = node;
+      displayInspector(node);
+      
+      if (node.status !== 'disrupted') {
+        const originalStatus = node.status;
+        node.status = 'warning';
+        setTimeout(() => { node.status = originalStatus; }, 350);
+      }
+    }
+  });
+
+  draw();
+}
+
+</script>
+</body>
+</html>
