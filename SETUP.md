@@ -30,13 +30,29 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ## Bước 2: Cài Đặt Dependencies
 
+Bạn có thể cài đặt trực tiếp tất cả các thư viện cần thiết thông qua tệp tin `requirements.txt`:
 ```powershell
 # Nâng cấp pip
 python -m pip install --upgrade pip
 
-# Cài đặt tất cả dependencies
+# Cài đặt tất cả dependencies từ file
 pip install -r requirements.txt
 ```
+
+### 📋 Danh Sách Các Thư Viện Cốt Lõi Được Cài Đặt:
+Dưới đây là chi tiết công dụng của từng thư viện cấu hình trong hệ thống:
+
+- **Flask Web Framework (UI Delivery)**:
+  - `Flask==3.0.3` & `Werkzeug==3.0.1` & `Jinja2==3.1.2`: Đóng vai trò máy chủ trung gian định tuyến yêu cầu, quản lý phiên và xử lý kết xuất giao diện động thời gian thực.
+- **Data Processing & ML Engine (Phân tích dữ liệu & Tính toán)**:
+  - `pandas==2.1.4`: Đọc và chuyển đổi 27,078 hàng của tập dữ liệu kiểm nghiệm chuỗi thời gian ô tô.
+  - `numpy==1.24.3`: Trích xuất biểu diễn hàm lượng Sine/Cosine tuần hoàn cho dữ liệu ngày tháng.
+  - `scikit-learn==1.3.2` & `joblib==1.3.2`: Trích nạp MinMaxScaler chuẩn hóa đầu vào đồng bộ cho LSTM.
+- **Bộ Nhớ Trọng Số Học Máy & Suy Luận Tuần Tự (AI Engines)**:
+  - `xgboost==2.0.3`: Đại hồi quy rừng phân nhánh tăng cường XGBoost đưa ra dự báo thời gian trễ chính xác.
+  - `tensorflow==2.14.0` & `keras==2.14.0`: Kiến trúc học sâu nắm bắt quy luật biến đổi chuỗi của LSTM.
+- **Thư viện môi trường bảo mật**:
+  - `python-dotenv==1.0.0`: Quản lý an toàn các biến cấu hình bảo mật môi trường độc lập.
 
 ## Bước 3: Chuẩn Bị Mô Hình
 
