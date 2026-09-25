@@ -23,17 +23,26 @@
         <p>SPATIAL GNN TELEMETRY & DELAY PREDICTION</p>
       </div>
     </div>
-    <div class="status-badge">{{ 'HỆ THỐNG ĐANG HOẠT ĐỘNG' if model_ready else 'LỖI KHỞI TẠO HỆ THỐNG' }}</div>
+    <div class="header-right">
+      <div class="status-badge">{{ 'HỆ THỐNG ĐANG HOẠT ĐỘNG' if model_ready else 'LỖI KHỞI TẠO HỆ THỐNG' }}</div>
+    </div>
   </header>
 
-  <div class="tabs-navigation">
-    <button id="tab-btn-dashboard" class="tab-btn active" onclick="switchMainTab('dashboard')">BẢNG DỰ BÁO GIAO
-      HÀNG</button>
-    <button id="tab-btn-database" class="tab-btn" onclick="switchMainTab('database')">ĐƠN HÀNG & THẢM HỌA THỰC
-      TẾ</button>
-  </div>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-label">Menu điều hướng</div>
+      <nav class="tabs-navigation">
+        <button id="tab-btn-database" class="tab-btn" onclick="switchMainTab('database')">
+          <span class="tab-btn-icon">📋</span> Đơn hàng &amp; Thảm họa thực tế
+        </button>
+        <button id="tab-btn-dashboard" class="tab-btn active" onclick="switchMainTab('dashboard')">
+          <span class="tab-btn-icon">📊</span> Bảng dự báo giao hàng
+        </button>
+      </nav>
+    </aside>
 
-  <div id="tab-pane-dashboard" class="tab-pane active">
+    <div class="content-area">
+      <div id="tab-pane-dashboard" class="tab-pane active">
     <div class="telemetry-bar">
       <div class="telemetry-lbl">
         <span class="pulse-dot"></span>
@@ -50,10 +59,10 @@
     </div>
 
     <div id="real-disaster-bar"
-      style="background: rgba(239, 68, 68, 0.1); border-bottom: 1.5px solid rgba(239, 68, 68, 0.2); padding: 14px 40px; display: none; gap: 20px; align-items: center; justify-content: space-between; font-size: 12px; font-family: var(--font-mono)">
-      <div id="real-disaster-text" style="color: #F87171; line-height: 1.6; flex: 1"></div>
+      style="background: rgba(239, 68, 68, 0.1); border-bottom: 1.5px solid rgba(239, 68, 68, 0.2); padding: 14px 2.5rem; display: none; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; font-size: 12px; font-family: var(--font-mono)">
+      <div id="real-disaster-text" style="color: #F87171; line-height: 1.6; flex: 1 1 20rem; min-width: 0"></div>
       <button id="btn-mirror-disaster" class="btn-telemetry"
-        style="background: var(--neon-amber); color: var(--space-bg); font-weight: 800; box-shadow: none"
+        style="background: var(--neon-amber); color: var(--space-bg); font-weight: 800; box-shadow: none; flex-shrink: 0"
         type="button">ĐỒNG BỘ THIÊN TAI THỰC TẾ</button>
     </div>
 
@@ -66,49 +75,61 @@
         <form id="predict-form">
           <div class="form-grid">
             <div class="form-group">
-              <label>Ngày phát sinh yêu cầu</label>
-              <input type="date" name="order_date" class="form-input" value="{{ today }}">
+              <label for="input-order-date">Ngày phát sinh yêu cầu</label>
+              <input type="date" id="input-order-date" name="order_date" class="form-input" value="{{ today }}">
             </div>
             <div class="form-group">
-              <label>Lead-term Cam kết hợp đồng (Days)</label>
-              <input type="number" name="shipping_days_scheduled" class="form-input" value="4" min="0" max="15">
+              <label for="input-shipping-days">Lead-term Cam kết hợp đồng (Days)</label>
+              <input type="number" id="input-shipping-days" name="shipping_days_scheduled" class="form-input" value="4" min="0" max="15">
             </div>
             <div class="form-group">
-              <label>Phương thức vận chuyển</label>
-              <select name="shipping_mode" class="form-input">
+              <label for="input-shipping-mode">Phương thức vận chuyển</label>
+              <select id="input-shipping-mode" name="shipping_mode" class="form-input">
                 {% for v in options.shipping_mode %}<option value="{{v}}">{{v}}</option>{% endfor %}
               </select>
             </div>
             <div class="form-group">
-              <label>Thị trường đích (Market Region)</label>
-              <select name="market" class="form-input">
-                {% for v in options.market %}<option value="{{v}}">{{v}}</option>{% endfor %}
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Khu vực hoàn thiện</label>
-              <select name="order_region" class="form-input">
+              <label for="input-order-region">Khu vực xuất phát (Kho / Nhà máy OEM)</label>
+              <select id="input-order-region" name="order_region" class="form-input">
                 {% for v in options.order_region %}<option value="{{v}}">{{v}}</option>{% endfor %}
               </select>
             </div>
             <div class="form-group">
-              <label>Mức độ ưu tiên lắp ráp (Segment)</label>
-              <select name="customer_segment" class="form-input">
-                {% for v in options.customer_segment %}<option value="{{v}}">{{v}}</option>{% endfor %}
+              <label for="input-order-country">Quốc gia xuất phát (Ảnh hưởng lớn nhất tới dự báo)</label>
+              <select id="input-order-country" name="order_country" class="form-input">
+                {% for v in options.order_country %}<option value="{{v}}">{{v}}</option>{% endfor %}
               </select>
             </div>
             <div class="form-group">
-              <label>Nhóm hệ thống thiết bị</label>
-              <select name="department_name" class="form-input">
-                {% for v in options.department_name %}
-                <option value="{{v}}">{% if v in automotive_map.departments %}{{ automotive_map.departments[v] }}{% else
-                  %}{{v}}{% endif %}</option>
-                {% endfor %}
-              </select>
+              <label id="lbl-market">Thị trường giao hàng (Điểm đến)</label>
+              <div class="form-input form-input-static" role="note" aria-labelledby="lbl-market" tabindex="0"
+                title="Trường này ảnh hưởng rất ít đến dự báo (dưới 2%), cố định để đơn giản hoá thao tác">
+                <span>Europe (Mặc định)</span>
+                <small class="static-hint">Ảnh hưởng &lt;2% tới dự báo — đã cố định</small>
+              </div>
+              <input type="hidden" name="market" value="Europe">
             </div>
             <div class="form-group">
-              <label>Tên cơ cấu phụ tùng lắp ráp</label>
-              <select name="category_name" class="form-input">
+              <label id="lbl-segment">Mức độ ưu tiên lắp ráp (Segment)</label>
+              <div class="form-input form-input-static" role="note" aria-labelledby="lbl-segment" tabindex="0"
+                title="Trường này ảnh hưởng rất ít đến dự báo (dưới 1.1%), cố định để đơn giản hoá thao tác">
+                <span>Consumer (Mặc định)</span>
+                <small class="static-hint">Ảnh hưởng &lt;1.1% tới dự báo — đã cố định</small>
+              </div>
+              <input type="hidden" name="customer_segment" value="Consumer">
+            </div>
+            <div class="form-group">
+              <label id="lbl-department">Nhóm hệ thống thiết bị</label>
+              <div class="form-input form-input-static" role="note" aria-labelledby="lbl-department" tabindex="0"
+                title="Trường này ảnh hưởng rất ít đến dự báo (dưới 1.4%), cố định để đơn giản hoá thao tác">
+                <span>Hệ thống Động cơ &amp; Truyền chuyển động (Mặc định)</span>
+                <small class="static-hint">Ảnh hưởng &lt;1.4% tới dự báo — đã cố định</small>
+              </div>
+              <input type="hidden" name="department_name" value="Fan Shop">
+            </div>
+            <div class="form-group">
+              <label for="input-category-name">Tên cơ cấu phụ tùng lắp ráp</label>
+              <select id="input-category-name" name="category_name" class="form-input">
                 {% for v in options.category_name %}
                 <option value="{{v}}">{% if v in automotive_map.categories %}{{ automotive_map.categories[v] }}{% else
                   %}{{v}}{% endif %}</option>
@@ -116,21 +137,21 @@
               </select>
             </div>
             <div class="form-group">
-              <label>Số lượng kiện (Batch Qty)</label>
-              <input type="number" name="order_item_quantity" class="form-input" value="2" min="1">
+              <label for="input-order-qty">Số lượng kiện (Batch Qty)</label>
+              <input type="number" id="input-order-qty" name="order_item_quantity" class="form-input" value="2" min="1">
             </div>
             <div class="form-group">
-              <label>Đơn giá trị / Linh kiện (USD)</label>
+              <label for="product_price_input">Đơn giá / Linh kiện (USD)</label>
               <input type="number" name="product_price" class="form-input" value="120" min="0" step="0.01"
                 id="product_price_input">
             </div>
             <div class="form-group">
-              <label>Chiết khấu ký kết (%)</label>
-              <input type="number" name="discount_rate" class="form-input" value="5" min="0" max="90">
+              <label for="input-discount-rate">Chiết khấu ký kết (%)</label>
+              <input type="number" id="input-discount-rate" name="discount_rate" class="form-input" value="5" min="0" max="90">
             </div>
             <div class="form-group">
-              <label>Trực quan nghẽn biên địa phương</label>
-              <select name="trend" class="form-input">
+              <label for="input-trend">Trực quan nghẽn biên địa phương</label>
+              <select id="input-trend" name="trend" class="form-input">
                 <option value="good">CLEAR — Luồng thông suốt, không dồn ứ</option>
                 <option value="normal" selected>NORMAL — Mật độ thông thường</option>
                 <option value="bad">WARNING — Nghẽn cảng bốc dỡ nghiêm trọng</option>
@@ -145,23 +166,24 @@
                 <input type="checkbox" id="disaster-toggle" name="disaster-toggle">
                 <span class="slider"></span>
               </label>
-              <span class="toggle-label">Mô phỏng rung động thiên tai cục bộ</span>
+              <label class="toggle-label" for="disaster-toggle">Mô phỏng rung động thiên tai cục bộ</label>
             </div>
             <div class="form-grid" id="disaster-fields" style="display:none; transition: all 0.3s ease;">
               <div class="form-group">
-                <label>Mức độ bão / Động đất (EM-DAT Mag)</label>
-                <input type="number" name="disaster_magnitude" class="form-input" value="5" min="0" max="1000"
+                <label for="input-disaster-magnitude">Mức độ bão / Động đất (EM-DAT Mag)</label>
+                <input type="number" id="input-disaster-magnitude" name="disaster_magnitude" class="form-input" value="5" min="0" max="1000"
                   step="0.1">
               </div>
               <div class="form-group">
-                <label>Số nhân công bị cô lập trực tiếp</label>
-                <input type="number" name="disaster_affected" class="form-input" value="10000" min="0">
+                <label for="input-disaster-affected">Số nhân công bị cô lập trực tiếp</label>
+                <input type="number" id="input-disaster-affected" name="disaster_affected" class="form-input" value="10000" min="0">
               </div>
               <div class="form-group">
-                <label>Tử vong hạ tầng ghi nhận</label>
-                <input type="number" name="disaster_deaths" class="form-input" value="0" min="0">
+                <label for="input-disaster-deaths">Tử vong hạ tầng ghi nhận</label>
+                <input type="number" id="input-disaster-deaths" name="disaster_deaths" class="form-input" value="0" min="0">
               </div>
             </div>
+
           </fieldset>
 
           <button class="btn-primary-cockpit" type="submit">CHẠY HỆ THỐNG DỰ BÁO THỜI GIAN THỰC</button>
@@ -209,9 +231,9 @@
         <div class="filter-group">
           <span style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-right: 4px">Bộ Lọc Thiên
             Tai:</span>
-          <button id="filter-all" class="filter-btn active" onclick="setHazardFilter('all')">Tất Cả ({% if test_avail
+          <button id="filter-all" class="filter-btn active" onclick="setHazardFilter('all')">TẤT CẢ ({% if test_avail
             %}27,078{% else %}0{% endif %})</button>
-          <button id="filter-disaster" class="filter-btn" onclick="setHazardFilter('disaster')">Báo Thiên Tai</button>
+          <button id="filter-disaster" class="filter-btn" onclick="setHazardFilter('disaster')">BÁO THIÊN TAI</button>
           <button id="filter-none" class="filter-btn" onclick="setHazardFilter('none')">AN TOÀN</button>
         </div>
       </div>
@@ -220,14 +242,14 @@
         <table class="premium-table">
           <thead>
             <tr>
-              <th style="width: 90px">Mã ĐH</th>
-              <th style="width: 110px">Ngày đặt</th>
-              <th>Mạch Vận Chuyển (Tuyến đường thực tế)</th>
+              <th style="min-width: 5.625rem">Mã ĐH</th>
+              <th style="min-width: 6.875rem">Ngày đặt</th>
+              <th>Tuyến Đường: Xuất Phát ➔ Giao Hàng</th>
               <th>Linh Kiện Ô Tô OEM (Đơn Giá x SL)</th>
-              <th style="width: 100px">Doanh thu</th>
-              <th style="width: 250px">Sự Cố Thảm Họa Đồng Thời (Overlap)</th>
-              <th style="width: 130px; text-align: center">Thực Tế Trễ</th>
-              <th style="width: 110px">Hành Động</th>
+              <th style="min-width: 6.25rem">Doanh thu</th>
+              <th style="min-width: 15.625rem">Sự Cố Thảm Họa Đồng Thời (Overlap)</th>
+              <th style="min-width: 8.125rem; text-align: center">Thực Tế Trễ</th>
+              <th style="min-width: 6.875rem">Hành Động</th>
             </tr>
           </thead>
           <tbody id="orders-table-tbody">
@@ -252,7 +274,9 @@
         </div>
       </div>
 
+      </div>
     </div>
+  </div>
   </div>
 
   <footer>KHÓA LUẬN TỐT NGHIỆP - AI DỰ BÁO RỦI RO CHUỖI CUNG ỨNG Ô TÔ - ĐẠI HỌC CÔNG NGHỆ THÔNG TIN UIT</footer>

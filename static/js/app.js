@@ -87,35 +87,49 @@
         const tr = document.createElement('tr');
 
         const routeHtml = `
-      <div style="font-weight: 600; color: var(--text-dark)">${order.customer_city}, ${order.customer_country}</div>
-      <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px; display: flex; align-items: center; gap: 4px">
-        <span>Tuyến đường:</span>
-        <span style="font-family: var(--font-mono); color: var(--neon-teal); font-weight: 700">
-          ${order.order_city || 'OEM Factory'} ➔ ${order.customer_country_iso || 'Customer Point'} (${order.shipping_mode})
-        </span>
+      <div style="font-size: 11px; color: var(--text-muted); display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-width: 0">
+        <span>📍 Xuất phát:</span>
+        <span style="font-weight: 600; color: var(--text-dark); overflow-wrap: break-word">${order.order_city || 'OEM Factory'}</span>
+      </div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-width: 0">
+        <span>🏁 Giao hàng:</span>
+        <span style="font-weight: 700; color: var(--neon-teal); overflow-wrap: break-word">${order.customer_city}, ${order.customer_country}</span>
+      </div>
+      <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 3px">
+        Phương thức: <span style="font-family: var(--font-mono); font-weight: 700">${order.shipping_mode}</span>
       </div>
     `;
 
-        // Sản phẩm: Hiển thị lòng danh sách toàn bộ sản phẩm bên trong đơn hàng
-        let productHtml = `<div style="display: flex; flex-direction: column; gap: 10px">`;
-        order.products.forEach((prod) => {
-          productHtml += `
-        <div style="border-left: 2.5px solid var(--neon-teal); padding-left: 10px">
-          <div style="font-weight: 700; color: var(--text-dark); max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap" title="${prod.product_name}">
+        // Sản phẩm: hiện sản phẩm đầu tiên, các sản phẩm còn lại thu gọn trong details
+        const renderProductBlock = (prod) => `
+        <div style="border-left: 2.5px solid var(--neon-teal); padding-left: 10px; min-width: 0">
+          <div style="font-weight: 700; color: var(--text-dark); max-width: 20rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap" title="${prod.product_name}">
             ${prod.product_name}
           </div>
           <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px">
-            Dòng: <span style="font-weight:600; color:#334155">${prod.category_name}</span> | SL: <span style="font-weight:700; color:var(--text-dark)">${prod.order_item_quantity} ${prod.auto_metrics.qty_unit}</span>
+            SL: <span style="font-weight:700; color:var(--text-dark)">${prod.order_item_quantity} ${prod.auto_metrics.qty_unit}</span>
             <span style="margin-left:6px; padding:2px 6px; background:#F1F5F9; border-radius:4px; font-weight:700; color:var(--text-dark)">$${prod.auto_metrics.auto_unit_price}/cái</span>
           </div>
           <div style="margin-top: 3px">
-            <button class="load-order-btn" style="padding: 2px 8px; font-size: 10px;" onclick="selectAndLoadOrder(${order.order_id}, ${prod.row_index})" title="Khảo sát dự báo riêng sản phẩm này">
+            <button class="load-order-btn" onclick="selectAndLoadOrder(${order.order_id}, ${prod.row_index})" title="Khảo sát dự báo riêng sản phẩm này">
               <span></span> Khảo sát sản phẩm này
             </button>
           </div>
         </div>
       `;
-        });
+
+        let productHtml = `<div style="display: flex; flex-direction: column; gap: 10px">`;
+        productHtml += renderProductBlock(order.products[0]);
+        if (order.products.length > 1) {
+          productHtml += `
+        <details class="product-more-details">
+          <summary class="product-more-toggle">+ ${order.products.length - 1} sản phẩm khác trong đơn</summary>
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px">
+            ${order.products.slice(1).map(renderProductBlock).join('')}
+          </div>
+        </details>
+      `;
+        }
         productHtml += `</div>`;
 
         // Giá trị tổng doanh thu của toàn bộ Đơn hàng
@@ -140,14 +154,9 @@
       `;
         } else {
           const activeCount = order.disasters.length;
-          hazardsHtml = `
-        <span class="badge-hazard-count danger" style="margin-bottom: 6px">
-          <span></span> Đứt gãy đan chéo (${activeCount} thiên tai song song)
-        </span>
-      `;
-          // Tạo các item thảm họa lồng liên đới
+          let detailItems = '';
           order.disasters.forEach((d) => {
-            hazardsHtml += `
+            detailItems += `
           <div class="badge-disaster-detail">
             <strong>${d.name} (${d.location})</strong>
             <div style="font-size: 10.5px; opacity: 0.85; margin: 1px 0">
@@ -159,6 +168,16 @@
           </div>
         `;
           });
+          hazardsHtml = `
+        <details class="hazard-details">
+          <summary class="badge-hazard-count danger">
+            <span></span> Đứt gãy đan chéo (${activeCount} thiên tai song song)
+          </summary>
+          <div class="hazard-detail-list">
+            ${detailItems}
+          </div>
+        </details>
+      `;
         }
 
         // Thời gian trễ thực tế
@@ -479,7 +498,7 @@
               const suppLoc = order.supplier_disaster_country_real || '-';
               const start = order.exposure_start_real ? order.exposure_start_real.split(' ')[0] : '-';
               const end = order.exposure_end_real ? order.exposure_end_real.split(' ')[0] : '-';
-              realDisasterText.innerHTML = `<strong>THIÊN TAI THỰC TẾ:</strong> ${activeCount} sự kiện bão lũ đang diễn ra · Chỉ số EM-DAT: <strong>${mag} Mgn</strong> · Ảnh hưởng: <strong>${affected.toLocaleString()} người</strong> · Địa bàn nhà cung cấp: <strong>${suppLoc}</strong>. Thời gian kéo dài: <strong>${start}</strong> â†’ <strong>${end}</strong>`;
+              realDisasterText.innerHTML = `<strong>THIÊN TAI THỰC TẾ:</strong> ${activeCount} sự kiện bão lũ đang diễn ra · Chỉ số EM-DAT: <strong>${mag} Mgn</strong> · Ảnh hưởng: <strong>${affected.toLocaleString()} người</strong> · Địa bàn nhà cung cấp: <strong>${suppLoc}</strong>. Thời gian kéo dài: <strong>${start}</strong> - <strong>${end}</strong>`;
             } else {
               realDisasterBar.style.display = 'none';
               realDisasterText.innerHTML = '';
@@ -606,7 +625,7 @@
           <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--neon-teal)"></span>
           THỐNG SỐ KHẾ ƯỚC THƯƠNG MẠI (AUTOMOTIVE OEM CONSTRAINTS)
         </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px 16px">
+        <div class="auto-metrics-grid">
           <div>. Phân loại ánh xạ: <strong style="color:var(--neon-teal); font-weight: 700">${data.mapped_category || 'Thiếu liên kết'}</strong></div>
           <div>. Nhóm hệ thống: <strong style="color:#0F172A; font-weight: 700">${data.mapped_department || 'Thiếu liên kết'}</strong></div>
           <div>. Chuẩn bao bì vỏ: <strong style="color:#0F172A; font-weight: 700">${autom.pack_type}</strong></div>
@@ -658,12 +677,12 @@
     `;
         data.top_factors.forEach(f => {
           html += `
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; font-size:12px">
-          <span style="color:var(--text-primary); font-weight:600">${f.feature}</span>
-          <div style="flex:1; height:6px; background:#E2E8F0; border-radius:10px; margin:0 15px; overflow:hidden">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; font-size:12px; gap:10px">
+          <span style="color:var(--text-primary); font-weight:600; flex-shrink:0; max-width:45%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap" title="${f.feature}">${f.feature}</span>
+          <div style="flex:1; min-width:3.75rem; height:6px; background:#E2E8F0; border-radius:10px; overflow:hidden">
             <span style="display:block; height:100%; width:${f.share}%; background:linear-gradient(90deg, var(--neon-teal), var(--neon-green)); border-radius:10px"></span>
           </div>
-          <span style="font-family:var(--font-mono); color:var(--neon-teal); font-weight:700; width:35px; text-align:right">${f.share}%</span>
+          <span style="font-family:var(--font-mono); color:var(--neon-teal); font-weight:700; width:35px; text-align:right; flex-shrink:0">${f.share}%</span>
         </div>
       `;
         });
@@ -691,9 +710,9 @@
 
       html += `
     <div class="sc-graph-container" style="margin-top:20px; border:1.5px solid #94A3B8; border-radius:12px; overflow:hidden; background:#0F192C">
-      <div class="sc-graph-header" style="background:#1E293B; color:#fff; padding:12px 16px; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #334155">
-        <span style="font-family:var(--font-sans); letter-spacing:0.5px">ĐỒ THỂ LIÊN KẾT KHÔNG GIAN GNN (SPATIAL-TEMPORAL SUPPLY GRAPH)</span>
-        <span style="font-size:11px; font-weight:700; background:var(--neon-teal); color:#fff; padding:3px 10px; border-radius:30px; text-transform:uppercase">TƯƠNG TÁC 3D Canvas</span>
+      <div class="sc-graph-header" style="background:#1E293B; color:#fff; padding:12px 16px; font-size:13px; font-weight:700; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; border-bottom:1px solid #334155">
+        <span style="font-family:var(--font-sans); letter-spacing:0.5px; min-width:0">ĐỒ THỂ LIÊN KẾT KHÔNG GIAN GNN (SPATIAL-TEMPORAL SUPPLY GRAPH)</span>
+        <span style="font-size:11px; font-weight:700; background:var(--neon-teal); color:#fff; padding:3px 10px; border-radius:30px; text-transform:uppercase; flex-shrink:0; white-space:nowrap">TƯƠNG TÁC 3D Canvas</span>
       </div>
       <div>
         <canvas id="gnnCanvas" width="540" height="280" style="width:100%; height:280px; display:block"></canvas>
@@ -749,14 +768,20 @@
       const width = rect.width;
       const height = rect.height;
 
-      // Khai báo cấu trúc các Node (Tọa độ cân đối trên mặt phẳng GNN)
+      // Tọa độ Node tính theo TỶ LỆ % chiều rộng/cao thực tế của canvas (không hard px)
+      // để không bị tràn/cắt khi canvas co giãn responsive trên điện thoại/tablet.
+      const colX = (frac) => width * frac;
+      const rowY = (frac) => height * frac;
+      const NODE_R = Math.max(12, Math.min(18, width * 0.035));
+
+      // Khai báo cấu trúc các Node (Tọa độ tỷ lệ % trên mặt phẳng GNN)
       const nodes = [
         {
           id: 'tier2',
           label: '1. Tier-2 Sourcing',
           icon: '🏭',
-          x: 75,
-          y: 70,
+          x: colX(0.16),
+          y: rowY(0.25),
           desc: 'Nguồn cung linh kiện gốc',
           details: `Quốc gia: <strong>${params.supplierCountry}</strong><br>🧩 Mặt hàng: <strong style="color:#E9A23B">${params.categoryMapped}</strong><br>🏭 Nhóm hệ thống: <strong>${params.departmentMapped}</strong><br>⚠️ Thiên tai chịu ảnh hưởng: <strong>${params.isDisrupted ? 'CÓ (Mức độ ' + params.disasterMag + ' Mgn)' : 'Không có'}</strong>`,
           status: params.isDisrupted ? 'disrupted' : 'good'
@@ -765,8 +790,8 @@
           id: 'tier1',
           label: '2. Tier-1 Sub-Assembly',
           icon: '🔧',
-          x: 235,
-          y: 70,
+          x: colX(0.5),
+          y: rowY(0.25),
           desc: 'Trung tâm tích hợp chi tiết máy',
           details: `Kiểm định chất lượng: <strong>Đạt tiêu chuẩn QS-9000</strong><br>📦 Trạng thái đóng gói: <strong>Đang hoàn thiện cơ cấu cụm phụ tùng</strong><br>⏱️ Thời gian lắp ráp bình quân: <strong>1.2 ngày</strong>`,
           status: 'good'
@@ -775,8 +800,8 @@
           id: 'logistics',
           label: '3. Logistics Transit',
           icon: '🚢',
-          x: 395,
-          y: 70,
+          x: colX(0.84),
+          y: rowY(0.25),
           desc: 'Tuyến vận chuyển liên quốc gia',
           details: `🚢 Hình thức vận chuyển: <strong>${params.shippingMode}</strong><br>📦 Cửa ngõ phân phối chính: <strong>${params.orderRegion}</strong><br>⚠️ Sức gió & Thời tiết tuyến biển: <strong>${params.isDisrupted ? 'Cường lưu bão bùng phát' : 'Thuận gió xuôi chèo'}</strong>`,
           status: params.isDisrupted ? 'warning' : 'good'
@@ -785,8 +810,8 @@
           id: 'oem_plant',
           label: '4. OEM Assembly',
           icon: '⚙️',
-          x: 395,
-          y: 200,
+          x: colX(0.84),
+          y: rowY(0.72),
           desc: 'Nhà máy lắp ráp ô tô trung tâm',
           details: `🏭 Trạm hoàn thiện: <strong>Khu vực Đông Nam Á / EU OEM</strong><br>📦 Tỷ lệ tồn kho dây chuyền: <strong>${params.isDisrupted ? 'Rất thấp (Dưới ngưỡng an toàn)' : 'Ổn định (5 ngày)'}</strong><br>⏱️ Trễ trung bình rolling 1D: <strong>${(params.delayDays * 0.4).toFixed(1)} ngày</strong>`,
           status: params.riskLevel === 'high' ? 'disrupted' : (params.riskLevel === 'medium' ? 'warning' : 'good')
@@ -795,8 +820,8 @@
           id: 'gnn_engine',
           label: 'GNN Feature Engine',
           icon: '🤖',
-          x: 235,
-          y: 135,
+          x: colX(0.5),
+          y: rowY(0.485),
           desc: 'Mạng nơ-ron tích hợp đồ thị AI',
           details: `Thuật toán học máy: <strong>XGBoost + LSTM Concurrent Ensemble</strong><br>📊 Dự báo độ trễ: <strong style="color:var(--amber)">${params.delayDays} ngày</strong> (LSTM: <strong>${params.lstmDays || '—'} ngày</strong>)<br>📈 Các feature chi phối chính: <br>${params.topFactors.map(f => ` - <i>${f.feature} (${f.share}%)</i>`).join('<br>')}`,
           status: 'ai'
@@ -805,8 +830,8 @@
           id: 'dealers',
           label: '5. Dealer / assembly',
           icon: '🏬',
-          x: 75,
-          y: 200,
+          x: colX(0.16),
+          y: rowY(0.72),
           desc: 'Phân phối đại lý & Khách hàng',
           details: `Khách hàng mục tiêu: <strong>${params.custSegment}</strong><br>⚠️ Mức độ rủi ro chuỗi: <strong style="text-transform:uppercase">${params.riskLevel}</strong><br>📦 Đề xuất Kho an toàn: <strong style="color:var(--teal)">${Math.ceil(params.delayDays * 1.5 + 1)} ngày sản xuất</strong>`,
           status: params.riskLevel === 'high' ? 'disrupted' : (params.riskLevel === 'medium' ? 'warning' : 'good')
@@ -949,14 +974,14 @@
 
           // Hiệu ứng lan truyền sóng xung động trên node thiên tai hoặc node bị nghẽn
           if (node.status === 'disrupted') {
-            const ringRadius = 22 + Math.sin(pulseTimer * 2.5) * 8;
+            const ringRadius = NODE_R * 1.22 + Math.sin(pulseTimer * 2.5) * (NODE_R * 0.44);
             ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
             ctx.lineWidth = 1.5;
             ctx.beginPath();
             ctx.arc(node.x, node.y, ringRadius, 0, Math.PI * 2);
             ctx.stroke();
           } else if (node.status === 'warning') {
-            const ringRadius = 20 + Math.sin(pulseTimer * 1.8) * 5;
+            const ringRadius = NODE_R * 1.11 + Math.sin(pulseTimer * 1.8) * (NODE_R * 0.28);
             ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
             ctx.lineWidth = 1.5;
             ctx.beginPath();
@@ -990,21 +1015,21 @@
           // Màu nền thân Node
           ctx.fillStyle = nodeBg;
           ctx.beginPath();
-          ctx.arc(node.x, node.y, 18, 0, Math.PI * 2);
+          ctx.arc(node.x, node.y, NODE_R, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
 
           // Vẽ Icon dạng text
           ctx.fillStyle = '#FFF';
-          ctx.font = '14px Arial';
+          ctx.font = `${Math.max(11, NODE_R * 0.78)}px Arial`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText(node.icon, node.x, node.y + 0.5);
 
           // Nhãn chữ tên Node
-          ctx.font = isSelected ? 'bold 11px Plus Jakarta Sans' : '10.5px Plus Jakarta Sans';
+          ctx.font = isSelected ? `bold ${Math.max(9, NODE_R * 0.61)}px Plus Jakarta Sans` : `${Math.max(8.5, NODE_R * 0.58)}px Plus Jakarta Sans`;
           ctx.fillStyle = isSelected ? '#FFFFFF' : '#94A3B8';
-          ctx.fillText(node.label, node.x, node.y + 31);
+          ctx.fillText(node.label, node.x, node.y + NODE_R + 13);
         });
 
         frameId = requestAnimationFrame(draw);
@@ -1031,7 +1056,7 @@
       function getNodeAtCoords(mx, my) {
         for (let node of nodes) {
           const dist = Math.hypot(node.x - mx, node.y - my);
-          if (dist <= 25) return node;
+          if (dist <= NODE_R + 7) return node;
         }
         return null;
       }
