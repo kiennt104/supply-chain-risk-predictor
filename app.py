@@ -3,6 +3,8 @@ import random
 import sys
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify
+import mimetypes
+mimetypes.add_type('text/css', '.css')
 
 # Insert 'src' into python search path to enable unified structured imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
@@ -14,7 +16,6 @@ from handlers.predictor import perform_prediction
 
 import pandas as pd
 
-# Lọc và load dataset test nếu tồn tại để phục vụ tính năng điền thử dữ liệu thực tế
 test_df_global = None
 try:
     test_filepath = 'dataset/test_dataset.csv'
@@ -53,24 +54,20 @@ def get_random_test_order():
         return jsonify({'success': False, 'message': 'Dataset test chưa được kết nối.'}), 400
         
     try:
-        # Chọn ngẫu nhiên một dòng
         idx = random.randint(0, len(test_df_global) - 1)
         row = test_df_global.iloc[idx].fillna("").to_dict()
         
-        # Lấy bản dịch ô tô tương ứng
         cat = row.get('category_name', 'Fishing')
         auto_product_name = Config.AUTOMOTIVE_MAP['categories'].get(cat, 'Cảm biến & Phụ tùng ô tô phụ thuộc (Dynamic OEM Component)')
         
-        # Ánh xạ các thông số số học (mức giá thực tế ô tô, quy chuẩn bao bì, phân nhóm hợp đồng)
         raw_price = float(row.get('product_price', row.get('order_item_product_price', 100.0)))
         raw_qty = int(row.get('order_item_quantity', 1))
         shipping_days_sched = int(row.get('shipping_days_scheduled', 4))
         
         auto_metrics = Config.map_numeric_to_automotive(raw_price, raw_qty, shipping_days_sched, cat)
         
-        # Format dữ liệu gửi về JS
         form_data = {
-            'order_date': str(row.get('order_date', '')).split(' ')[0], # Bỏ giờ nếu có
+            'order_date': str(row.get('order_date', '')).split(' ')[0],
             'shipping_days_scheduled': shipping_days_sched,
             'shipping_mode': row.get('shipping_mode', 'Standard Class'),
             'market': row.get('market', 'Europe'),
@@ -83,7 +80,6 @@ def get_random_test_order():
             'product_price': round(raw_price, 2),
             'discount_rate': round(float(row.get('order_item_discount_rate', 0)) * 100),
             
-            # Đính kèm thông số ô tô đã biến đổi phục vụ việc hiển thị ở giao diện
             'auto_unit_price': auto_metrics['auto_unit_price'],
             'auto_total_value': auto_metrics['auto_total_value'],
             'pack_type': auto_metrics['pack_type'],
@@ -92,7 +88,6 @@ def get_random_test_order():
             'contract_type': auto_metrics['contract_type'],
             'actual_carrier_route': auto_metrics['actual_carrier_route'],
             
-            # Lưu vết thông tin thực tế của dòng này để đối chiếu demo
             'order_id_real': int(row.get('order_id', 0)),
             'shipping_days_real': int(row.get('shipping_days_real', 0)),
             'raw_delay_days_real': int(row.get('raw_delay_days', 0)),
@@ -100,8 +95,6 @@ def get_random_test_order():
             'disaster_exposed_real': 1 if str(row.get('disaster_exposed', '0')).strip().lower() == 'true' else 0,
             'active_disaster_count_real': float(row.get('active_disaster_count', 0) or 0),
 
-            # Thông tin chi tiết thiên tai thực tế tại thời điểm đơn hàng (để người dùng
-            # có thể tự tay giả lập lại y hệt kịch bản này và so sánh dự báo)
             'known_disaster_count_real': float(row.get('known_disaster_count', 0) or 0),
             'current_max_disaster_magnitude_real': float(row.get('current_max_disaster_magnitude', 0) or 0),
             'current_max_affected_real': float(row.get('current_max_affected', 0) or 0),
@@ -113,7 +106,6 @@ def get_random_test_order():
             'exposure_start_real': str(row.get('exposure_start', '') or ''),
             'exposure_end_real': str(row.get('exposure_end', '') or ''),
             
-            # Thêm các rolling time-series đặc trưng của dòng này để đưa thẳng vào mô hình khi test
             'avg_delay_1d': float(row.get('avg_delay_1d', 0)),
             'avg_delay_2d': float(row.get('avg_delay_2d', 0)),
             'avg_delay_3d': float(row.get('avg_delay_3d', 0)),
@@ -141,21 +133,18 @@ def get_orders():
         return jsonify({'success': False, 'message': 'Dataset không khả dụng.'}), 400
 
     try:
-        # Nhập các tham số phân trang & lọc
         page = max(1, int(request.args.get('page', 1)))
-        per_page = max(1, min(100, int(request.args.get('per_page', 10)))) # Mặc định 10 đơn hàng lớn một trang
+        per_page = max(1, min(100, int(request.args.get('per_page', 10))))
         hazard_filter = request.args.get('hazard_filter', 'all') # 'all', 'disaster', 'none'
         search = request.args.get('search', '').strip().lower()
 
         df_filtered = test_df_global.copy()
 
-        # Áp dụng bộ lọc thảm họa trước khi gom nhóm để tăng tốc
         if hazard_filter == 'disaster':
             df_filtered = df_filtered[df_filtered['disaster_exposed'].astype(str).str.strip().str.lower() == 'true']
         elif hazard_filter == 'none':
             df_filtered = df_filtered[df_filtered['disaster_exposed'].astype(str).str.strip().str.lower() != 'true']
 
-        # Áp dụng bộ lọc từ khóa tìm kiếm
         if search:
             mask = (
                 df_filtered['order_id'].astype(str).str.contains(search) |
@@ -176,15 +165,12 @@ def get_orders():
                 'total_pages': 0
             })
 
-        # Thực hiện tiến trình Gom nhóm thông minh (Group By Order ID)
         grouped = df_filtered.groupby('order_id', sort=False)
         
-        # Danh sách mã đơn hàng duy nhất sau khi lọc
         unique_order_ids = list(grouped.groups.keys())
         total_records = len(unique_order_ids)
         total_pages = (total_records + per_page - 1) // per_page
 
-        # Phân trang trên danh sách Order ID lớn
         start_idx = (page - 1) * per_page
         end_idx = start_idx + per_page
         order_ids_slice = unique_order_ids[start_idx:end_idx]
@@ -193,10 +179,8 @@ def get_orders():
         for order_id in order_ids_slice:
             df_order_sub = grouped.get_group(order_id)
             
-            # Lấy bản ghi đầu tiên làm đại diện cho metadata đơn hàng (Route, Địa chỉ, Ngày đặt, Thảm họa)
             first_row = df_order_sub.iloc[0].fillna("").to_dict()
             
-            # Xây dựng danh sách sản phẩm lồng ghép bên trong đơn hàng
             products = []
             total_sales = 0.0
             
@@ -226,7 +210,6 @@ def get_orders():
                     'product_price': raw_p,
                     'auto_metrics': auto_metrics,
                     
-                    # Rolling time-series (để nạp chính xác nếu chọn khảo sát sản phẩm cụ thể này)
                     'avg_delay_1d': float(row_dict.get('avg_delay_1d', 0)),
                     'avg_delay_2d': float(row_dict.get('avg_delay_2d', 0)),
                     'avg_delay_3d': float(row_dict.get('avg_delay_3d', 0)),
@@ -241,7 +224,6 @@ def get_orders():
                     'order_volume_5d': float(row_dict.get('order_volume_5d', 0)),
                 })
             
-            # Xây dựng danh sách thảm họa chi tiết (cho đại diện đơn hàng)
             disaster_exposed_val = str(first_row.get('disaster_exposed', '0')).strip().lower() == 'true'
             disaster_count = int(float(first_row.get('disaster_count', 0) or 0))
             
@@ -253,7 +235,6 @@ def get_orders():
                 affected = int(float(first_row.get('max_total_affected', 0) or 0))
                 mag = float(first_row.get('max_disaster_magnitude', 0) or 0)
                 
-                # Thảm họa 1: Phía nhà cung ứng
                 if supp_iso and supp_iso != '0' and supp_iso != '':
                     country_names = {
                         'BRA': 'Brazil (Dòng chảy linh kiện gầm vỏ)',
@@ -280,7 +261,6 @@ def get_orders():
                         'impact': 'Đình trệ cơ cấu đóng gói và lưu kho linh kiện, làm tăng nguy cơ chậm trễ lịch trình vận tải.'
                     })
                 
-                # Thảm họa 2: Phía điểm nhận nhận hàng / khách hàng
                 if cust_iso and cust_iso != '0' and cust_iso != '':
                     disasters.append({
                         'name': 'Bão nhiệt đới gây lụt ngập cục bộ hạ tầng' if cust_iso == 'PRI' else 'Siêu bão xáo động bưu chính & phân phối cục bộ',
@@ -292,7 +272,6 @@ def get_orders():
                         'impact': 'Tê liệt dịch vụ bưu chính nội địa vùng tiêu thụ, phong tỏa giao nhận logistics chặng cuối.'
                     })
                     
-                # Bổ sung thảm họa nếu số lượng đếm thực tế cao hơn (Multi-hazard compounding)
                 if len(disasters) < disaster_count:
                     diff = disaster_count - len(disasters)
                     for i in range(diff):
@@ -306,7 +285,6 @@ def get_orders():
                             'impact': f'Sự cố dây chuyền từ {disaster_count} biến động ngoại cảnh gây mất cân bằng trọng tải logistics tàu biển.'
                         })
 
-            # Format dữ liệu lớn của Đơn hàng tổng thể
             orders_list.append({
                 'order_id': int(order_id),
                 'order_date': str(first_row.get('order_date', '')).split(' ')[0],
@@ -319,13 +297,11 @@ def get_orders():
                 'order_region': str(first_row.get('order_region', '') or ''),
                 'customer_segment': str(first_row.get('customer_segment', '') or ''),
                 
-                # Thực tế đối chiếu đơn hàng (Cam kết giao hàng lấy theo đại diện dòng đầu)
                 'shipping_days_real': int(first_row.get('shipping_days_real', 0)),
                 'shipping_days_scheduled': int(days_sched),
                 'raw_delay_days_real': int(first_row.get('raw_delay_days', 0)),
                 'delay_days_real': float(first_row.get('delay_days', 0.0)),
                 
-                # Biến số thảm họa
                 'disaster_exposed_real': 1 if disaster_exposed_val else 0,
                 'active_disaster_count_real': float(first_row.get('active_disaster_count', 0) or 0),
                 'known_disaster_count_real': float(first_row.get('known_disaster_count', 0) or 0),
@@ -341,7 +317,6 @@ def get_orders():
                 'pre_order_disaster_exposure': disaster_exposed_val,
                 'active_disaster_exposure': str(first_row.get('active_disaster_exposure', '0')).strip().lower() == 'true',
                 
-                # Hợp nhóm mảng sản phẩm và tổng doanh thu
                 'products': products,
                 'total_sales': total_sales,
                 'disasters': disasters,
@@ -369,11 +344,9 @@ def predict():
         features = prepare_features(data)
         result = perform_prediction(features, loader)
         
-        # Thêm thông tin dịch nghĩa ngành hàng, danh mục ô tô vào kết quả trả về
         cat_val = data.get("category_name", "")
         dept_val = data.get("department_name", "")
         
-        # Thực hiện ánh xạ bổ sung các thông số số học khi người dùng bấm predict
         raw_price = float(data.get("product_price", 100))
         raw_qty = int(data.get("order_item_quantity", 1))
         shipping_days_sched = int(data.get("shipping_days_scheduled", 4))
@@ -383,7 +356,6 @@ def predict():
         result["mapped_category"] = Config.AUTOMOTIVE_MAP["categories"].get(cat_val, cat_val)
         result["mapped_department"] = Config.AUTOMOTIVE_MAP["departments"].get(dept_val, dept_val)
         
-        # Đính kèm kết quả tính toán nghiệp vụ ô tô thương mại
         result["auto_metrics"] = auto_metrics
         
         return jsonify(result)

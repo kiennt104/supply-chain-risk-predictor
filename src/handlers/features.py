@@ -51,7 +51,7 @@ def prepare_features(form_data):
         features["order_item_discount"] = 0.0
 
     # 2. Xử lý kịch bản thiên tai REALTIME từ form
-    is_disaster = form_data.get("disaster_toggle") == 'true' or form_data.get("disaster_toggle") == True
+    is_disaster = form_data.get("disaster-toggle") == 'true' or form_data.get("disaster-toggle") == True
     if is_disaster:
         features["active_disaster_count"] = float(form_data.get("active_disaster_count_real", 1.0) or 1.0)
         features["known_disaster_count"] = float(form_data.get("known_disaster_count_real", 1.0) or 1.0)
