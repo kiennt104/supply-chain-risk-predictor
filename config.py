@@ -10,7 +10,7 @@ load_dotenv()
 
 class Config:
     """Base configuration"""
-    FLASK_ENV = os.getenv('FLASK_ENV', 'development')
+    FLASK_ENV = os.getenv('FLASK_ENV', 'production')
     FLASK_DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
     PORT = int(os.getenv('PORT', 5000))
     HOST = os.getenv('HOST', '127.0.0.1')
