@@ -135,7 +135,7 @@ def get_random_test_order():
 
 @app.route('/api/orders', methods=['GET'])
 def get_orders():
-    """Truy vấn danh sách đơn hàng thực tế kèm phân tích chi tiết thảm họa"""
+    """Truy vấn danh sách đơn hàng thực tế kèm phân tích chi tiết thảm họa (Gom nhóm theo Order ID)"""
     global test_df_global
     if test_df_global is None:
         return jsonify({'success': False, 'message': 'Dataset không khả dụng.'}), 400
@@ -143,22 +143,20 @@ def get_orders():
     try:
         # Nhập các tham số phân trang & lọc
         page = max(1, int(request.args.get('page', 1)))
-        per_page = max(1, min(100, int(request.args.get('per_page', 15))))
+        per_page = max(1, min(100, int(request.args.get('per_page', 10)))) # Mặc định 10 đơn hàng lớn một trang
         hazard_filter = request.args.get('hazard_filter', 'all') # 'all', 'disaster', 'none'
         search = request.args.get('search', '').strip().lower()
 
         df_filtered = test_df_global.copy()
 
-        # Áp dụng bộ lọc thảm họa
+        # Áp dụng bộ lọc thảm họa trước khi gom nhóm để tăng tốc
         if hazard_filter == 'disaster':
-            # disaster_exposed == 'True'
             df_filtered = df_filtered[df_filtered['disaster_exposed'].astype(str).str.strip().str.lower() == 'true']
         elif hazard_filter == 'none':
             df_filtered = df_filtered[df_filtered['disaster_exposed'].astype(str).str.strip().str.lower() != 'true']
 
         # Áp dụng bộ lọc từ khóa tìm kiếm
         if search:
-            # Tìm trong order_id, product_name, customer_city, order_city, category_name
             mask = (
                 df_filtered['order_id'].astype(str).str.contains(search) |
                 df_filtered['product_name'].astype(str).str.lower().str.contains(search) |
@@ -168,40 +166,92 @@ def get_orders():
             )
             df_filtered = df_filtered[mask]
 
-        total_records = len(df_filtered)
+        if df_filtered.empty:
+            return jsonify({
+                'success': True,
+                'orders': [],
+                'page': page,
+                'per_page': per_page,
+                'total_records': 0,
+                'total_pages': 0
+            })
+
+        # Thực hiện tiến trình Gom nhóm thông minh (Group By Order ID)
+        grouped = df_filtered.groupby('order_id', sort=False)
+        
+        # Danh sách mã đơn hàng duy nhất sau khi lọc
+        unique_order_ids = list(grouped.groups.keys())
+        total_records = len(unique_order_ids)
         total_pages = (total_records + per_page - 1) // per_page
 
-        # Lấy slice dữ liệu tương ứng trang hiện tại
+        # Phân trang trên danh sách Order ID lớn
         start_idx = (page - 1) * per_page
         end_idx = start_idx + per_page
-        df_slice = df_filtered.iloc[start_idx:end_idx]
+        order_ids_slice = unique_order_ids[start_idx:end_idx]
 
         orders_list = []
-        for idx, row in df_slice.iterrows():
-            row_dict = row.fillna("").to_dict()
+        for order_id in order_ids_slice:
+            df_order_sub = grouped.get_group(order_id)
             
-            # Metadata dịch thuật
-            cat = row_dict.get('category_name', 'Fishing')
-            dept = row_dict.get('department_name', 'Fan Shop')
-            auto_product = Config.AUTOMOTIVE_MAP['categories'].get(cat, 'Phụ tùng OEM chất lượng cao')
+            # Lấy bản ghi đầu tiên làm đại diện cho metadata đơn hàng (Route, Địa chỉ, Ngày đặt, Thảm họa)
+            first_row = df_order_sub.iloc[0].fillna("").to_dict()
             
-            raw_p = float(row_dict.get('product_price', row_dict.get('order_item_product_price', 100.0)))
-            raw_q = int(row_dict.get('order_item_quantity', 1))
-            days_sched = int(row_dict.get('shipping_days_scheduled', 4))
+            # Xây dựng danh sách sản phẩm lồng ghép bên trong đơn hàng
+            products = []
+            total_sales = 0.0
             
-            auto_metrics = Config.map_numeric_to_automotive(raw_p, raw_q, days_sched, cat)
+            for sub_idx, row in df_order_sub.iterrows():
+                row_dict = row.fillna("").to_dict()
+                
+                cat = row_dict.get('category_name', 'Fishing')
+                dept = row_dict.get('department_name', 'Fan Shop')
+                auto_product = Config.AUTOMOTIVE_MAP['categories'].get(cat, 'Phụ tùng OEM chất lượng cao')
+                
+                raw_p = float(row_dict.get('product_price', row_dict.get('order_item_product_price', 100.0)))
+                raw_q = int(row_dict.get('order_item_quantity', 1))
+                days_sched = int(row_dict.get('shipping_days_scheduled', 4))
+                
+                auto_metrics = Config.map_numeric_to_automotive(raw_p, raw_q, days_sched, cat)
+                sales_val = float(row_dict.get('sales', 0.0))
+                total_sales += sales_val
+                
+                products.append({
+                    'row_index': sub_idx,
+                    'product_name': auto_product,
+                    'product_name_original': str(row_dict.get('product_name', '') or ''),
+                    'category_name': cat,
+                    'department_name': dept,
+                    'order_item_quantity': raw_q,
+                    'sales': sales_val,
+                    'product_price': raw_p,
+                    'auto_metrics': auto_metrics,
+                    
+                    # Rolling time-series (để nạp chính xác nếu chọn khảo sát sản phẩm cụ thể này)
+                    'avg_delay_1d': float(row_dict.get('avg_delay_1d', 0)),
+                    'avg_delay_2d': float(row_dict.get('avg_delay_2d', 0)),
+                    'avg_delay_3d': float(row_dict.get('avg_delay_3d', 0)),
+                    'avg_delay_5d': float(row_dict.get('avg_delay_5d', 0)),
+                    'late_rate_1d': float(row_dict.get('late_rate_1d', 0)),
+                    'late_rate_2d': float(row_dict.get('late_rate_2d', 0)),
+                    'late_rate_3d': float(row_dict.get('late_rate_3d', 0)),
+                    'late_rate_5d': float(row_dict.get('late_rate_5d', 0)),
+                    'order_volume_1d': float(row_dict.get('order_volume_1d', 0)),
+                    'order_volume_2d': float(row_dict.get('order_volume_2d', 0)),
+                    'order_volume_3d': float(row_dict.get('order_volume_3d', 0)),
+                    'order_volume_5d': float(row_dict.get('order_volume_5d', 0)),
+                })
             
-            # Xây dựng danh sách thảm họa chi tiết
-            disaster_exposed_val = str(row_dict.get('disaster_exposed', '0')).strip().lower() == 'true'
-            disaster_count = int(float(row_dict.get('disaster_count', 0) or 0))
+            # Xây dựng danh sách thảm họa chi tiết (cho đại diện đơn hàng)
+            disaster_exposed_val = str(first_row.get('disaster_exposed', '0')).strip().lower() == 'true'
+            disaster_count = int(float(first_row.get('disaster_count', 0) or 0))
             
             disasters = []
             if disaster_exposed_val and disaster_count > 0:
-                cust_iso = str(row_dict.get('customer_disaster_country_iso', '') or '').strip()
-                supp_iso = str(row_dict.get('supplier_disaster_country_iso', '') or '').strip()
-                deaths = int(float(row_dict.get('max_total_deaths', 0) or 0))
-                affected = int(float(row_dict.get('max_total_affected', 0) or 0))
-                mag = float(row_dict.get('max_disaster_magnitude', 0) or 0)
+                cust_iso = str(first_row.get('customer_disaster_country_iso', '') or '').strip()
+                supp_iso = str(first_row.get('supplier_disaster_country_iso', '') or '').strip()
+                deaths = int(float(first_row.get('max_total_deaths', 0) or 0))
+                affected = int(float(first_row.get('max_total_affected', 0) or 0))
+                mag = float(first_row.get('max_disaster_magnitude', 0) or 0)
                 
                 # Thảm họa 1: Phía nhà cung ứng
                 if supp_iso and supp_iso != '0' and supp_iso != '':
@@ -256,62 +306,45 @@ def get_orders():
                             'impact': f'Sự cố dây chuyền từ {disaster_count} biến động ngoại cảnh gây mất cân bằng trọng tải logistics tàu biển.'
                         })
 
-            # Format dữ liệu tương đồng với random-test-order để JS nạp được
+            # Format dữ liệu lớn của Đơn hàng tổng thể
             orders_list.append({
-                'row_index': idx,
-                'order_id': int(row_dict.get('order_id', 0)),
-                'order_date': str(row_dict.get('order_date', '')).split(' ')[0],
-                'customer_city': str(row_dict.get('customer_city', '') or ''),
-                'customer_country': str(row_dict.get('customer_country', '') or ''),
-                'order_city': str(row_dict.get('order_city', '') or ''),
-                'order_country': str(row_dict.get('order_country', '') or ''),
-                'product_name': auto_product,
-                'product_name_original': str(row_dict.get('product_name', '') or ''),
-                'category_name': cat,
-                'department_name': dept,
-                'sales': float(row_dict.get('sales', 0)),
-                'order_item_quantity': raw_q,
-                'shipping_mode': str(row_dict.get('shipping_mode', '') or ''),
+                'order_id': int(order_id),
+                'order_date': str(first_row.get('order_date', '')).split(' ')[0],
+                'customer_city': str(first_row.get('customer_city', '') or ''),
+                'customer_country': str(first_row.get('customer_country', '') or ''),
+                'order_city': str(first_row.get('order_city', '') or ''),
+                'order_country': str(first_row.get('order_country', '') or ''),
+                'shipping_mode': str(first_row.get('shipping_mode', '') or ''),
+                'market': str(first_row.get('market', '') or ''),
+                'order_region': str(first_row.get('order_region', '') or ''),
+                'customer_segment': str(first_row.get('customer_segment', '') or ''),
                 
-                # Thực tế đối chiếu
-                'shipping_days_real': int(row_dict.get('shipping_days_real', 0)),
-                'shipping_days_scheduled': days_sched,
-                'raw_delay_days_real': int(row_dict.get('raw_delay_days', 0)),
-                'delay_days_real': float(row_dict.get('delay_days', 0.0)),
+                # Thực tế đối chiếu đơn hàng (Cam kết giao hàng lấy theo đại diện dòng đầu)
+                'shipping_days_real': int(first_row.get('shipping_days_real', 0)),
+                'shipping_days_scheduled': int(days_sched),
+                'raw_delay_days_real': int(first_row.get('raw_delay_days', 0)),
+                'delay_days_real': float(first_row.get('delay_days', 0.0)),
                 
-                # Chi tiết thiên tai gốc
+                # Biến số thảm họa
                 'disaster_exposed_real': 1 if disaster_exposed_val else 0,
-                'active_disaster_count_real': float(row_dict.get('active_disaster_count', 0) or 0),
-                'known_disaster_count_real': float(row_dict.get('known_disaster_count', 0) or 0),
-                'current_max_disaster_magnitude_real': float(row_dict.get('current_max_disaster_magnitude', 0) or 0),
-                'current_max_affected_real': float(row_dict.get('current_max_affected', 0) or 0),
-                'current_max_deaths_real': float(row_dict.get('current_max_deaths', 0) or 0),
+                'active_disaster_count_real': float(first_row.get('active_disaster_count', 0) or 0),
+                'known_disaster_count_real': float(first_row.get('known_disaster_count', 0) or 0),
+                'current_max_disaster_magnitude_real': float(first_row.get('current_max_disaster_magnitude', 0) or 0),
+                'current_max_affected_real': float(first_row.get('current_max_affected', 0) or 0),
+                'current_max_deaths_real': float(first_row.get('current_max_deaths', 0) or 0),
                 'disaster_count_real': float(disaster_count),
-                'max_disaster_magnitude_real': float(row_dict.get('max_disaster_magnitude', 0) or 0),
-                'customer_disaster_country_real': str(row_dict.get('customer_disaster_country_iso', '') or ''),
-                'supplier_disaster_country_real': str(row_dict.get('supplier_disaster_country_iso', '') or ''),
-                'exposure_start_real': str(row_dict.get('exposure_start', '') or ''),
-                'exposure_end_real': str(row_dict.get('exposure_end', '') or ''),
+                'max_disaster_magnitude_real': float(first_row.get('max_disaster_magnitude', 0) or 0),
+                'customer_disaster_country_real': str(first_row.get('customer_disaster_country_iso', '') or ''),
+                'supplier_disaster_country_real': str(first_row.get('supplier_disaster_country_iso', '') or ''),
+                'exposure_start_real': str(first_row.get('exposure_start', '') or ''),
+                'exposure_end_real': str(first_row.get('exposure_end', '') or ''),
                 'pre_order_disaster_exposure': disaster_exposed_val,
-                'active_disaster_exposure': str(row_dict.get('active_disaster_exposure', '0')).strip().lower() == 'true',
+                'active_disaster_exposure': str(first_row.get('active_disaster_exposure', '0')).strip().lower() == 'true',
                 
-                # Dynamic disasters detail list
+                # Hợp nhóm mảng sản phẩm và tổng doanh thu
+                'products': products,
+                'total_sales': total_sales,
                 'disasters': disasters,
-                'auto_metrics': auto_metrics,
-                
-                # Rolling time-series
-                'avg_delay_1d': float(row_dict.get('avg_delay_1d', 0)),
-                'avg_delay_2d': float(row_dict.get('avg_delay_2d', 0)),
-                'avg_delay_3d': float(row_dict.get('avg_delay_3d', 0)),
-                'avg_delay_5d': float(row_dict.get('avg_delay_5d', 0)),
-                'late_rate_1d': float(row_dict.get('late_rate_1d', 0)),
-                'late_rate_2d': float(row_dict.get('late_rate_2d', 0)),
-                'late_rate_3d': float(row_dict.get('late_rate_3d', 0)),
-                'late_rate_5d': float(row_dict.get('late_rate_5d', 0)),
-                'order_volume_1d': float(row_dict.get('order_volume_1d', 0)),
-                'order_volume_2d': float(row_dict.get('order_volume_2d', 0)),
-                'order_volume_3d': float(row_dict.get('order_volume_3d', 0)),
-                'order_volume_5d': float(row_dict.get('order_volume_5d', 0)),
             })
 
         return jsonify({
@@ -322,6 +355,9 @@ def get_orders():
             'total_records': total_records,
             'total_pages': total_pages
         })
+    except Exception as e:
+        print(f"Lỗi truy vấn dữ liệu đơn hàng: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
     except Exception as e:
         print(f"Lỗi truy vấn dữ liệu đơn hàng: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500

@@ -1104,7 +1104,7 @@ function renderOrdersTable(data) {
   ordersListGlobal.forEach((order) => {
     const tr = document.createElement('tr');
     
-    // Tuyến đường vận chuyển
+    // Tuyến đường vận chuyển đại diện cho cả Đơn hàng
     const routeHtml = `
       <div style="font-weight: 600; color: var(--text-dark)">${order.customer_city}, ${order.customer_country}</div>
       <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px; display: flex; align-items: center; gap: 4px">
@@ -1115,29 +1115,41 @@ function renderOrdersTable(data) {
       </div>
     `;
 
-    // Sản phẩm
-    const productHtml = `
-      <div style="font-weight: 700; color: var(--text-dark); max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap" title="${order.product_name}">
-        ${order.product_name}
-      </div>
-      <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px">
-        Loại: <span style="font-weight:600; color:#334155">${order.category_name}</span> | SL: <span style="font-weight:700; color:var(--text-dark)">${order.order_item_quantity} ${order.auto_metrics.qty_unit}</span>
-      </div>
-    `;
+    // Sản phẩm: Hiển thị lồng danh sách toàn bộ sản phẩm bên trong đơn hàng
+    let productHtml = `<div style="display: flex; flex-direction: column; gap: 10px">`;
+    order.products.forEach((prod) => {
+      productHtml += `
+        <div style="border-left: 2.5px solid var(--neon-teal); padding-left: 10px">
+          <div style="font-weight: 700; color: var(--text-dark); max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap" title="${prod.product_name}">
+            ${prod.product_name}
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px">
+            Dòng: <span style="font-weight:600; color:#334155">${prod.category_name}</span> | SL: <span style="font-weight:700; color:var(--text-dark)">${prod.order_item_quantity} ${prod.auto_metrics.qty_unit}</span>
+            <span style="margin-left:6px; padding:2px 6px; background:#F1F5F9; border-radius:4px; font-weight:700; color:var(--text-dark)">$${prod.auto_metrics.auto_unit_price}/cái</span>
+          </div>
+          <div style="margin-top: 3px">
+            <button class="load-order-btn" style="padding: 2px 8px; font-size: 10px;" onclick="selectAndLoadOrder(${order.order_id}, ${prod.row_index})" title="Khảo sát dự báo riêng sản phẩm này">
+              <span>⚡</span> Khảo sát sản phẩm này
+            </button>
+          </div>
+        </div>
+      `;
+    });
+    productHtml += `</div>`;
 
-    // Giá trị doanh thu
+    // Giá trị tổng doanh thu của toàn bộ Đơn hàng
     const salesHtml = `
-      <div style="font-family: var(--font-mono); font-weight: 700; color: var(--text-dark)">
-        $${order.sales.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+      <div style="font-family: var(--font-mono); font-weight: 800; color: var(--neon-teal); font-size: 14px">
+        $${order.total_sales.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
       </div>
-      <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px">
-        Đơn giá: $${order.auto_metrics.auto_unit_price}/cái
+      <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 3px; font-weight: 600">
+        Tổng ${order.products.length} dòng hàng
       </div>
     `;
 
     // Thiên tai ảnh hưởng chồng chập (Overlap)
     let hazardsHtml = '';
-    const hasDisaster = order.disaster_exposed;
+    const hasDisaster = order.disaster_exposed_real > 0;
     
     if (!hasDisaster || order.disasters.length === 0) {
       hazardsHtml = `
@@ -1191,22 +1203,17 @@ function renderOrdersTable(data) {
       `;
     }
 
-    // Nút Load nạp vào mô hình
-    const actionHtml = `
-      <button class="load-order-btn" onclick="selectAndLoadOrder(${order.row_index})" title="Nạp nhanh thông số đơn này vào biểu mẫu dự báo GNN">
-        <span>⚡</span> Khảo sát
-      </button>
-    `;
-
     tr.innerHTML = `
-      <td class="order-id-col">#${order.order_id}</td>
+      <td class="order-id-col" style="font-size: 14px">#${order.order_id}</td>
       <td style="font-family: var(--font-mono); color: var(--text-dark); font-weight: 600">${order.order_date}</td>
       <td>${routeHtml}</td>
       <td>${productHtml}</td>
       <td>${salesHtml}</td>
       <td>${hazardsHtml}</td>
       <td>${delayHtml}</td>
-      <td style="text-align: center">${actionHtml}</td>
+      <td style="text-align: center; font-weight: 700; color: var(--text-muted); font-size: 11px">
+        Chọn nút Khảo sát bên cột Sản phẩm
+      </td>
     `;
 
     tbody.appendChild(tr);
@@ -1214,6 +1221,7 @@ function renderOrdersTable(data) {
 
   updatePaginationUI(data.total_records, data.page, data.total_pages);
 }
+
 
 // Quản lý bộ lọc loại thiên tai
 function setHazardFilter(filterType) {
@@ -1272,22 +1280,43 @@ function updatePaginationUI(totalRecords, currentPage, totalPages) {
 }
 
 // Điền nhanh thông tin đơn hàng được chọn từ Database vào Form để giả lý thuyết dự đoán
-function selectAndLoadOrder(rowIndex) {
+function selectAndLoadOrder(orderId, prodRowIndex) {
   // Tìm kiếm đơn tương ứng trong listGlobal hiện hành
-  const order = ordersListGlobal.find(o => o.row_index === rowIndex);
+  const order = ordersListGlobal.find(o => o.order_id === orderId);
   if (!order) return;
 
-  activeTestData = order; // Thiết đặt telemetry data rolling cho payload prediction
+  // Lấy dòng sản phẩm cụ thể được click
+  const prod = order.products.find(p => p.row_index === prodRowIndex);
+  if (!prod) return;
+
+  // Ghép nối gộp dữ liệu để phục vụ nạp payload dự báo
+  activeTestData = {
+    ...order,
+    ...prod,
+    // ghi đè thông tin sản phẩm cụ thể để model nhận diện chuẩn xác
+    product_name_real: prod.product_name,
+    product_price: prod.product_price,
+    order_item_quantity: prod.order_item_quantity,
+    category_name: prod.category_name,
+    department_name: prod.department_name,
+    auto_unit_price: prod.auto_metrics.auto_unit_price,
+    auto_total_value: prod.auto_metrics.auto_total_value,
+    pack_type: prod.auto_metrics.pack_type,
+    auto_qty: prod.auto_metrics.auto_qty,
+    qty_unit: prod.auto_metrics.qty_unit,
+    contract_type: prod.auto_metrics.contract_type,
+    actual_carrier_route: prod.auto_metrics.actual_carrier_route,
+  };
 
   // Chuyển biểu mẫu form
-  fillFormData(order);
+  fillFormData(activeTestData);
 
   // Chuyển đổi tab về Dashboard
   switchMainTab('dashboard');
 
   // Hiển thị dải băng Real-Time Telemetry Bar chỉ báo việc nạp thành công
   if (testOrderInfo) {
-    testOrderInfo.textContent = `NẠP THÀNH CÔNG ĐƠN HÀNG THỰC TẾ: #${order.order_id} (${order.product_name}) - Thực tế giao mất ${order.shipping_days_real} ngày.`;
+    testOrderInfo.textContent = `NẠP THÀNH CÔNG ĐƠN HÀNG THỰC TẾ: #${order.order_id} (${prod.product_name}) - Thực tế giao mất ${order.shipping_days_real} ngày.`;
     testOrderInfo.style.display = 'inline-block';
     testOrderInfo.style.color = 'var(--neon-teal)';
     testOrderInfo.style.backgroundColor = 'rgba(13, 148, 136, 0.08)';
@@ -1297,7 +1326,6 @@ function selectAndLoadOrder(rowIndex) {
   // Tự động kích hoạt thanh disaster-bar nếu đơn này bị tác động bởi thảm họa thực tế
   if (order.disaster_exposed_real > 0) {
     if (realDisasterBar && realDisasterText) {
-      const overlapDays = (order.auto_metrics && order.auto_metrics.actual_carrier_route === 'Maritime Lane A-15') ? 8 : 6;
       let text = `[HỆ THỐNG ĐƯỢC CẢNH BÁO]: Có thảm họa xuất hiện đè lên chuỗi hành hành trình vận chuyển của đơn tự động #${order.order_id}. `;
       order.disasters.forEach(d => {
         text += `➔ ${d.name} (${d.location}) ảnh hưởng khu vực: ${d.role}. `;
