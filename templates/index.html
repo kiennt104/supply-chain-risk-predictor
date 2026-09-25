@@ -485,6 +485,302 @@
     margin-top: 40px;
     font-weight: 500;
   }
+
+  /* CSS Tab Switcher & Premium Orders Database Table and UI Styles */
+  .tabs-navigation {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #FFFFFF;
+    border-bottom: 2px solid var(--glass-border);
+    padding: 0 40px;
+    position: sticky;
+    top: 77px;
+    z-index: 90;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+  }
+
+  .tab-btn {
+    padding: 16px 20px;
+    font-weight: 700;
+    font-size: 13.5px;
+    color: var(--text-muted);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    position: relative;
+    transition: all 0.2s ease;
+  }
+
+  .tab-btn:hover {
+    color: var(--text-dark);
+  }
+
+  .tab-btn.active {
+    color: var(--neon-teal);
+  }
+
+  .tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background-color: var(--neon-teal);
+    border-radius: 3px 3px 0 0;
+  }
+
+  .tab-pane {
+    display: none;
+  }
+
+  .tab-pane.active {
+    display: block;
+  }
+
+  /* Orders table view */
+  .orders-view-card {
+    background: #FFFFFF;
+    border: 1.5px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 10px 30px -5px rgba(22, 30, 49, 0.05);
+    margin: 30px 40px;
+  }
+
+  .orders-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .search-wrapper {
+    position: relative;
+    max-width: 400px;
+    width: 100%;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 10px 16px 10px 40px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: var(--font-sans);
+    border: 1.5px solid #CBD5E1;
+    border-radius: 8px;
+    color: var(--text-dark);
+    background: #FFFFFF;
+    transition: all 0.2s ease;
+  }
+
+  .search-input:focus {
+    outline: none;
+    border-color: var(--neon-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: #64748B;
+  }
+
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .filter-btn {
+    border: 1.5px solid #CBD5E1;
+    background: #FFFFFF;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    transition: all 0.2s ease;
+  }
+
+  .filter-btn:hover {
+    border-color: #94A3B8;
+    color: var(--text-dark);
+  }
+
+  .filter-btn.active {
+    background-color: rgba(13, 148, 136, 0.08);
+    border-color: var(--neon-teal);
+    color: var(--neon-teal);
+  }
+
+  /* Table premium layout */
+  .table-responsive {
+    overflow-x: auto;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    background: #FFFFFF;
+    margin-bottom: 16px;
+  }
+
+  .premium-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    text-align: left;
+  }
+
+  .premium-table th {
+    background-color: #F8FAFC;
+    color: #334155;
+    font-weight: 700;
+    padding: 14px 16px;
+    border-bottom: 2.5px solid #E2E8F0;
+    text-transform: uppercase;
+    font-size: 10.5px;
+    letter-spacing: 0.5px;
+  }
+
+  .premium-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #EFF1F5;
+    color: var(--text-primary);
+    vertical-align: middle;
+  }
+
+  .premium-table tr:hover td {
+    background-color: #F8FAFC;
+  }
+
+  /* Badge hazards */
+  .badge-hazard-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 30px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .badge-hazard-count.safe {
+    background-color: #F0FDF4;
+    color: var(--neon-green);
+    border: 1px solid #BBF7D0;
+  }
+
+  .badge-hazard-count.danger {
+    background-color: #FEF2F2;
+    color: var(--neon-red);
+    border: 1px solid #FECACA;
+  }
+
+  .badge-disaster-detail {
+    font-size: 11.5px;
+    background-color: #FFFBEB;
+    border: 1px solid #FDE68A;
+    border-left: 3px solid #D97706;
+    color: #92400E;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-top: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .badge-disaster-detail strong {
+    color: #78350F;
+    font-weight: 700;
+  }
+
+  .badge-disaster-detail .impact-desc {
+    font-size: 11px;
+    color: #451A03;
+    opacity: 0.9;
+  }
+
+  .order-id-col {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--text-dark);
+  }
+
+  .load-order-btn {
+    background-color: rgba(13, 148, 136, 0.08);
+    color: var(--neon-teal);
+    border: 1.5px solid rgba(13, 148, 136, 0.2);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .load-order-btn:hover {
+    background-color: var(--neon-teal);
+    color: #FFFFFF;
+    border-color: var(--neon-teal);
+  }
+
+  /* Pagination */
+  .pagination-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 10px;
+    font-family: var(--font-sans);
+    font-size: 12.5px;
+    color: var(--text-muted);
+  }
+
+  .page-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .pagination-btn {
+    border: 1.5px solid #CBD5E1;
+    background: #FFFFFF;
+    color: var(--text-dark);
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    transition: all 0.2s ease;
+  }
+
+  .pagination-btn:hover:not(:disabled) {
+    border-color: #94A3B8;
+  }
+
+  .pagination-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .page-info {
+    font-weight: 600;
+    color: var(--text-dark);
+  }
 </style>
 </head>
 <body>
@@ -499,27 +795,33 @@
   <div class="status-badge">{{ '🟢 SYSTEM ACTIVE' if model_ready else '🔴 SYSTEM INITIALIZATION FAULT' }}</div>
 </header>
 
-<div class="telemetry-bar">
-  <div class="telemetry-lbl">
-    <span class="pulse-dot"></span>
-    <span>SỰ KIỆN QUY CHUẨN THỜI GIAN THỰC (REAL-TIME PIPELINE MONITOR):</span>
+<div class="tabs-navigation">
+  <button id="tab-btn-dashboard" class="tab-btn active" onclick="switchMainTab('dashboard')">📊 GNN FORECAST COCKPIT</button>
+  <button id="tab-btn-database" class="tab-btn" onclick="switchMainTab('database')">📦 ĐƠN HÀNG & THẢM HỌA THỰC TẾ</button>
+</div>
+
+<div id="tab-pane-dashboard" class="tab-pane active">
+  <div class="telemetry-bar">
+    <div class="telemetry-lbl">
+      <span class="pulse-dot"></span>
+      <span>SỰ KIỆN QUY CHUẨN THỜI GIAN THỰC (REAL-TIME PIPELINE MONITOR):</span>
+      {% if test_avail %}
+        <span id="test-order-info" style="margin-left: 10px; display:none">Waiting for telemetry ingestion...</span>
+      {% else %}
+        <span style="color:var(--neon-amber)">Thông số giả lập thử nghiệm chưa kích hoạt.</span>
+      {% endif %}
+    </div>
     {% if test_avail %}
-      <span id="test-order-info" style="margin-left: 10px; display:none">Waiting for telemetry ingestion...</span>
-    {% else %}
-      <span style="color:var(--neon-amber)">Thông số giả lập thử nghiệm chưa kích hoạt.</span>
+      <button id="btn-draw-test" class="btn-telemetry" type="button">🧬 Nạp Dữ Liệu Thực Tế Ngẫu Nhiên</button>
     {% endif %}
   </div>
-  {% if test_avail %}
-    <button id="btn-draw-test" class="btn-telemetry" type="button"> Ingest Live Telemetry Batch</button>
-  {% endif %}
-</div>
 
-<div id="real-disaster-bar" style="background: rgba(239, 68, 68, 0.1); border-bottom: 1.5px solid rgba(239, 68, 68, 0.2); padding: 14px 40px; display: none; gap: 20px; align-items: center; justify-content: space-between; font-size: 12px; font-family: var(--font-mono)">
-  <div id="real-disaster-text" style="color: #F87171; line-height: 1.6; flex: 1"></div>
-  <button id="btn-mirror-disaster" class="btn-telemetry" style="background: var(--neon-amber); color: var(--space-bg); font-weight: 800; box-shadow: none" type="button">MIRROR ENVIRONMENT</button>
-</div>
+  <div id="real-disaster-bar" style="background: rgba(239, 68, 68, 0.1); border-bottom: 1.5px solid rgba(239, 68, 68, 0.2); padding: 14px 40px; display: none; gap: 20px; align-items: center; justify-content: space-between; font-size: 12px; font-family: var(--font-mono)">
+    <div id="real-disaster-text" style="color: #F87171; line-height: 1.6; flex: 1"></div>
+    <button id="btn-mirror-disaster" class="btn-telemetry" style="background: var(--neon-amber); color: var(--space-bg); font-weight: 800; box-shadow: none" type="button">ĐỒNG BỘ THIÊN TAI THỰC TẾ</button>
+  </div>
 
-<main>
+  <main>
   <!-- Sườn Trái: Điều Khiển telemetry (Form) -->
   <section class="control-card">
     <h2><span class="icon-h">⚙️</span> Control Center Ingestion</h2>
@@ -622,7 +924,7 @@
         </div>
       </fieldset>
 
-      <button class="btn-primary-cockpit" type="submit">⚡ RUN REAL-TIME PREDICTOR PIPELINE</button>
+      <button class="btn-primary-cockpit" type="submit">⚡ CHẠY HỆ THỐNG DỰ BÁO THỜI GIAN THỰC</button>
     </form>
   </section>
 
@@ -634,15 +936,434 @@
       <div class="output-empty-slate">
         <div class="slate-icon">⚡</div>
         <h3 style="font-size:15px; font-weight:600; text-transform:uppercase; margin-bottom:8px">Hệ thống đang rảnh rỗi</h3>
-        <p style="font-size:12px; color:var(--text-muted)">Cung cấp tham số ở sườn điều điều hiển hoặc nhấn Ingest Live Telemetry phía trên để xem trực quan hóa đồ thị GNN.</p>
+        <p style="font-size:12px; color:var(--text-muted)">Cung cấp tham số ở sườn điều hiển hoặc nhấn Ingest Live Telemetry phía trên để xem trực quan hóa đồ thị GNN.</p>
       </div>
     </div>
   </section>
 </main>
+</div> <!-- Close #tab-pane-dashboard -->
+
+<!-- TAB 2: ĐƠN HÀNG & THẢM HỌA THỰC TẾ -->
+<div id="tab-pane-database" class="tab-pane">
+  <div class="orders-view-card">
+    <div class="orders-toolbar" style="border-bottom: 2px solid #F1F5F9; padding-bottom: 18px; margin-bottom: 20px">
+      <div>
+        <h2 style="font-size: 18px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px">
+          <span>📦</span> Cơ Sở Dữ Liệu Đơn Hàng & Thảm Họa Thực Tế
+        </h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px">
+          Tra cứu thông tin chi tiết từng đơn hàng trong tập mẫu thử nghiệm `test_dataset.csv`. Cho phép phân tích liên đới của từng thảm họa và nạp nhanh thông số vào mô hình GNN/LSTM.
+        </p>
+      </div>
+    </div>
+
+    <!-- Thanh Tìm Kiếm và Bộ Lọc Thảm Họa -->
+    <div class="orders-toolbar">
+      <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="order-search-input" class="search-input" placeholder="Tìm theo ID Đơn hàng, Tên sản phẩm, Tỉnh thành..." onkeyup="handleSearchKeyup(event)">
+      </div>
+      
+      <div class="filter-group">
+        <span style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-right: 4px">BỘ LỌC THIÊN TAI:</span>
+        <button id="filter-all" class="filter-btn active" onclick="setHazardFilter('all')">TẤT CẢ ({% if test_avail %}27,078{% else %}0{% endif %})</button>
+        <button id="filter-disaster" class="filter-btn" onclick="setHazardFilter('disaster')">BỊ THIÊN TAI ⚠️</button>
+        <button id="filter-none" class="filter-btn" onclick="setHazardFilter('none')">AN TOÀN ✅</button>
+      </div>
+    </div>
+
+    <!-- Bảng hiển thị đơn hàng -->
+    <div class="table-responsive">
+      <table class="premium-table">
+        <thead>
+          <tr>
+            <th style="width: 90px">Mã ĐH</th>
+            <th style="width: 110px">Ngày đặt</th>
+            <th>Mạch Vận Chuyển (Tuyến đường thực tế)</th>
+            <th>Linh Kiện Ô Tô OEM (Đơn Giá x SL)</th>
+            <th style="width: 100px">Doanh thu</th>
+            <th style="width: 250px">Sự Cố Thảm Họa Đồng Thời (Overlap)</th>
+            <th style="width: 130px; text-align: center">Thực Tế Trễ</th>
+            <th style="width: 110px">Hành Động</th>
+          </tr>
+        </thead>
+        <tbody id="orders-table-tbody">
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted)">
+              Đang tải danh sách đơn hàng từ cơ sở dữ liệu...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Giao diện phân trang -->
+    <div class="pagination-container">
+      <div>
+        Hiển thị <span id="page-range-text" style="font-weight: 700; color: var(--text-dark)">0 - 0</span> trong tổng số <span id="page-total-text" style="font-weight: 700; color: var(--text-dark)">0</span> bản ghi
+      </div>
+      <div class="page-controls">
+        <button id="btn-page-prev" class="pagination-btn" onclick="changeOrderPage(-1)" disabled>Trang trước</button>
+        <span class="page-info">Trang <span id="page-current">1</span> / <span id="page-total-pages">1</span></span>
+        <button id="btn-page-next" class="pagination-btn" onclick="changeOrderPage(1)" disabled>Trang sau</button>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 <footer>HỒ SƠ KHÓA LUẬN TỐT NGHIỆP THUYẾT MINH CHUỖI CUNG ỨNG Ô TÔ - ĐẠI HỌC CÔNG NGHỆ THÔNG TIN UIT</footer>
 
 <script>
+// Quản lý Tab chính của giao diện điều khiển
+function switchMainTab(tabName) {
+  const btnDashboard = document.getElementById('tab-btn-dashboard');
+  const btnDatabase = document.getElementById('tab-btn-database');
+  const paneDashboard = document.getElementById('tab-pane-dashboard');
+  const paneDatabase = document.getElementById('tab-pane-database');
+
+  if (tabName === 'dashboard') {
+    btnDashboard.classList.add('active');
+    btnDatabase.classList.remove('active');
+    paneDashboard.classList.add('active');
+    paneDatabase.classList.remove('active');
+  } else {
+    btnDashboard.classList.remove('active');
+    btnDatabase.classList.add('active');
+    paneDashboard.classList.remove('active');
+    paneDatabase.classList.add('active');
+    // Truy vấn danh sách đơn hàng khi chuyển sang Tab Database lần đầu hoặc load lại
+    loadOrdersDatabase();
+  }
+}
+
+// Global State quản lý truy vấn Database đơn hàng
+let currentOrdersPage = 1;
+let currentHazardFilter = 'all';
+let currentSearchQuery = '';
+let ordersListGlobal = [];
+
+// Hàm load dữ liệu từ API /api/orders
+async function loadOrdersDatabase() {
+  const tbody = document.getElementById('orders-table-tbody');
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-dark); font-weight: 600">
+        <span class="pulse-dot"></span> Đang tải cơ sở dữ liệu và phân tích thảm họa từ máy chủ...
+      </td>
+    </tr>
+  `;
+
+  try {
+    const url = `/api/orders?page=${currentOrdersPage}&per_page=15&hazard_filter=${currentHazardFilter}&search=${encodeURIComponent(currentSearchQuery)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.success) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" style="text-align: center; padding: 40px; color: var(--neon-red); font-weight: 700">
+            Lỗi: ${data.message || 'Không thể liên kết cơ sở dữ liệu'}
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    ordersListGlobal = data.orders || [];
+    renderOrdersTable(data);
+  } catch (err) {
+    console.error(err);
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align: center; padding: 40px; color: var(--neon-red); font-weight: 700">
+          Lỗi máy chủ kết nối dịch vụ API đơn hàng: ${err.message}
+        </td>
+      </tr>
+    `;
+  }
+}
+
+// Render dữ liệu lên Table
+function renderOrdersTable(data) {
+  const tbody = document.getElementById('orders-table-tbody');
+  
+  if (ordersListGlobal.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted); font-weight: 600">
+          Không tìm thấy đơn hàng nào khớp với điều kiện tìm kiếm hoặc bộ lọc hiện hành.
+        </td>
+      </tr>
+    `;
+    updatePaginationUI(0, 1, 1);
+    return;
+  }
+
+  tbody.innerHTML = '';
+  ordersListGlobal.forEach((order) => {
+    const tr = document.createElement('tr');
+    
+    // Tuyến đường vận chuyển
+    const routeHtml = `
+      <div style="font-weight: 600; color: var(--text-dark)">${order.customer_city}, ${order.customer_country}</div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px; display: flex; align-items: center; gap: 4px">
+        <span>📍 Tuyến đường:</span>
+        <span style="font-family: var(--font-mono); color: var(--neon-teal); font-weight: 700">
+          ${order.order_city || 'OEM Factory'} ➔ ${order.customer_country_iso || 'Customer Point'} (${order.shipping_mode})
+        </span>
+      </div>
+    `;
+
+    // Sản phẩm
+    const productHtml = `
+      <div style="font-weight: 700; color: var(--text-dark); max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap" title="${order.product_name}">
+        ${order.product_name}
+      </div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px">
+        Loại: <span style="font-weight:600; color:#334155">${order.category_name}</span> | SL: <span style="font-weight:700; color:var(--text-dark)">${order.order_item_quantity} ${order.auto_metrics.qty_unit}</span>
+      </div>
+    `;
+
+    // Giá trị doanh thu
+    const salesHtml = `
+      <div style="font-family: var(--font-mono); font-weight: 700; color: var(--text-dark)">
+        $${order.sales.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+      </div>
+      <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px">
+        Đơn giá: $${order.auto_metrics.auto_unit_price}/cái
+      </div>
+    `;
+
+    // Thiên tai ảnh hưởng chồng chập (Overlap)
+    let hazardsHtml = '';
+    const hasDisaster = order.disaster_exposed;
+    
+    if (!hasDisaster || order.disasters.length === 0) {
+      hazardsHtml = `
+        <span class="badge-hazard-count safe">
+          <span>🟢</span> Greenfield (An toàn)
+        </span>
+      `;
+    } else {
+      const activeCount = order.disasters.length;
+      hazardsHtml = `
+        <span class="badge-hazard-count danger" style="margin-bottom: 6px">
+          <span>⚠️</span> Đứt gãy đan chéo (${activeCount} thiên tai song song)
+        </span>
+      `;
+      // Tạo các item thảm họa lồng liên đới
+      order.disasters.forEach((d) => {
+        hazardsHtml += `
+          <div class="badge-disaster-detail">
+            <strong>⛈️ ${d.name} (${d.location})</strong>
+            <div style="font-size: 10.5px; opacity: 0.85; margin: 1px 0">
+              Vùng bị ảnh hưởng: <span style="font-weight: 600; color: #1E293B">${d.role}</span>
+              ${d.magnitude !== 'N/A' ? ` | Cấp độ: <span style="font-family: var(--font-mono); font-weight: 700">${d.magnitude}</span>` : ''}
+              ${d.deaths !== '0' ? ` | Thương vong: <span style="font-family: var(--font-mono); font-weight: 700; color: var(--neon-red)">${d.deaths}</span>` : ''}
+            </div>
+            <div class="impact-desc">➔ <em>Hệ quả: ${d.impact}</em></div>
+          </div>
+        `;
+      });
+    }
+
+    // Thời gian trễ thực tế
+    let delayHtml = '';
+    const delayDays = order.delay_days_real;
+    const isLate = order.raw_delay_days_real > 0;
+    
+    if (delayDays <= 0) {
+      delayHtml = `
+        <div style="font-weight: 700; color: var(--neon-green)">✅ ĐÚNG HẠN</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px">
+          Thực nhận: <span style="font-family: var(--font-mono); font-weight: 700">${order.shipping_days_real} ngày</span>
+          <br>(Cam kết: ${order.shipping_days_scheduled} ngày)
+        </div>
+      `;
+    } else {
+      delayHtml = `
+        <div style="font-weight: 700; color: var(--neon-amber)">❌ TRỄ HẠN</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px">
+          Trễ thực tế: <span style="font-family: var(--font-mono); font-weight: 700; color: var(--neon-red)">+${delayDays.toFixed(1)} ngày</span>
+          <br>(Thực nhận: ${order.shipping_days_real} ngày / Cam kết: ${order.shipping_days_scheduled} ngày)
+        </div>
+      `;
+    }
+
+    // Nút Load nạp vào mô hình
+    const actionHtml = `
+      <button class="load-order-btn" onclick="selectAndLoadOrder(${order.row_index})" title="Nạp nhanh thông số đơn này vào biểu mẫu dự báo GNN">
+        <span>⚡</span> Khảo sát
+      </button>
+    `;
+
+    tr.innerHTML = `
+      <td class="order-id-col">#${order.order_id}</td>
+      <td style="font-family: var(--font-mono); color: var(--text-dark); font-weight: 600">${order.order_date}</td>
+      <td>${routeHtml}</td>
+      <td>${productHtml}</td>
+      <td>${salesHtml}</td>
+      <td>${hazardsHtml}</td>
+      <td>${delayHtml}</td>
+      <td style="text-align: center">${actionHtml}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+
+  updatePaginationUI(data.total_records, data.page, data.total_pages);
+}
+
+// Quản lý bộ lọc loại thiên tai
+function setHazardFilter(filterType) {
+  // Thay đổi class active trên các nút lọc
+  document.getElementById('filter-all').classList.remove('active');
+  document.getElementById('filter-disaster').classList.remove('active');
+  document.getElementById('filter-none').classList.remove('active');
+
+  document.getElementById(`filter-${filterType}`).classList.add('active');
+
+  currentHazardFilter = filterType;
+  currentOrdersPage = 1; // reset về trang đầu
+  loadOrdersDatabase();
+}
+
+// Xử lý tìm kiếm
+let searchTimeout = null;
+function handleSearchKeyup(event) {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    currentSearchQuery = document.getElementById('order-search-input').value;
+    currentOrdersPage = 1; // reset về trang đầu
+    loadOrdersDatabase();
+  }, 350); // debounce 350ms tránh spam API liên tục
+}
+
+// Điều khiển chuyển trang
+function changeOrderPage(direction) {
+  currentOrdersPage += direction;
+  loadOrdersDatabase();
+}
+
+// Cập nhật giao diện phân trang
+function updatePaginationUI(totalRecords, currentPage, totalPages) {
+  const currentSpan = document.getElementById('page-current');
+  const totalPagesSpan = document.getElementById('page-total-pages');
+  const totalRecordsSpan = document.getElementById('page-total-text');
+  const prevBtn = document.getElementById('btn-page-prev');
+  const nextBtn = document.getElementById('btn-page-next');
+  const rangeSpan = document.getElementById('page-range-text');
+
+  currentSpan.textContent = currentPage;
+  totalPagesSpan.textContent = totalPages || 1;
+  totalRecordsSpan.textContent = totalRecords ? totalRecords.toLocaleString('vi-VN') : 0;
+
+  prevBtn.disabled = (currentPage <= 1);
+  nextBtn.disabled = (currentPage >= totalPages);
+
+  if (totalRecords === 0) {
+    rangeSpan.textContent = '0';
+  } else {
+    const startRange = (currentPage - 1) * 15 + 1;
+    const endRange = Math.min(currentPage * 15, totalRecords);
+    rangeSpan.textContent = `${startRange.toLocaleString('vi-VN')} - ${endRange.toLocaleString('vi-VN')}`;
+  }
+}
+
+// Điền nhanh thông tin đơn hàng được chọn từ Database vào Form để giả lý thuyết dự đoán
+function selectAndLoadOrder(rowIndex) {
+  // Tìm kiếm đơn tương ứng trong listGlobal hiện hành
+  const order = ordersListGlobal.find(o => o.row_index === rowIndex);
+  if (!order) return;
+
+  activeTestData = order; // Thiết đặt telemetry data rolling cho payload prediction
+
+  // Chuyển biểu mẫu form
+  fillFormData(order);
+
+  // Chuyển đổi tab về Dashboard
+  switchMainTab('dashboard');
+
+  // Hiển thị dải băng Real-Time Telemetry Bar chỉ báo việc nạp thành công
+  if (testOrderInfo) {
+    testOrderInfo.textContent = `NẠP THÀNH CÔNG ĐƠN HÀNG THỰC TẾ: #${order.order_id} (${order.product_name}) - Thực tế giao mất ${order.shipping_days_real} ngày.`;
+    testOrderInfo.style.display = 'inline-block';
+    testOrderInfo.style.color = 'var(--neon-teal)';
+    testOrderInfo.style.backgroundColor = 'rgba(13, 148, 136, 0.08)';
+    testOrderInfo.style.border = '1px solid rgba(13, 148, 136, 0.2)';
+  }
+
+  // Tự động kích hoạt thanh disaster-bar nếu đơn này bị tác động bởi thảm họa thực tế
+  if (order.disaster_exposed_real > 0) {
+    if (realDisasterBar && realDisasterText) {
+      const overlapDays = (order.auto_metrics && order.auto_metrics.actual_carrier_route === 'Maritime Lane A-15') ? 8 : 6;
+      let text = `[HỆ THỐNG ĐƯỢC CẢNH BÁO]: Có thảm họa xuất hiện đè lên chuỗi hành hành trình vận chuyển của đơn tự động #${order.order_id}. `;
+      order.disasters.forEach(d => {
+        text += `➔ ${d.name} (${d.location}) ảnh hưởng khu vực: ${d.role}. `;
+      });
+      realDisasterText.innerHTML = text;
+      realDisasterBar.style.display = 'flex';
+    }
+  } else {
+    if (realDisasterBar) {
+      realDisasterBar.style.display = 'none';
+    }
+  }
+
+  // Cuộn mượt mà lên đầu trang để sẵn sàng trải nghiệm dự báo và GNN
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Điền các giá trị vào thẻ Form controls
+function fillFormData(order) {
+  const fields = {
+    'order_date': order.order_date,
+    'shipping_days_scheduled': order.shipping_days_scheduled,
+    'shipping_mode': order.shipping_mode,
+    'market': order.market,
+    'order_region': order.order_region,
+    'customer_segment': order.customer_segment,
+    'department_name': order.department_name,
+    'category_name': order.category_name,
+    'order_item_quantity': order.order_item_quantity,
+    'product_price': (order.auto_metrics ? order.auto_metrics.auto_unit_price : null) || order.product_price || 100,
+  };
+
+  for (const [name, val] of Object.entries(fields)) {
+    const input = form.querySelector(`[name="${name}"]`);
+    if (input) {
+      input.value = val;
+    }
+  }
+
+  // Cấu hình các nút thảm họa giả lập tương đồng trạng thái thực tế
+  if (order.disaster_exposed_real > 0) {
+    disasterToggle.checked = true;
+    disasterFields.style.display = 'grid';
+
+    // Đổ các thông số thiên tai thực tế vào sườn input khả dụng của Form một cách an toàn
+    const setVal = (elName, val) => {
+      const el = form.querySelector(`[name="${elName}"]`);
+      if (el) el.value = val;
+    };
+
+    setVal("disaster_magnitude", order.current_max_disaster_magnitude_real || (order.auto_metrics ? order.auto_metrics.max_disaster_magnitude : 5));
+    setVal("disaster_affected", order.current_max_affected_real || 10000);
+    setVal("disaster_deaths", order.current_max_deaths_real || 0);
+
+    // Cũng ghi vào các cấu hỉnh thuộc tính bổ trợ nếu có khai báo ẩn
+    setVal("active_disaster_count", order.active_disaster_count_real);
+    setVal("known_disaster_count", order.known_disaster_count_real);
+    setVal("current_max_disaster_magnitude", order.current_max_disaster_magnitude_real);
+    setVal("current_max_affected", order.current_max_affected_real);
+    setVal("current_max_deaths", order.current_max_deaths_real);
+  } else {
+    disasterToggle.checked = false;
+    disasterFields.style.display = 'none';
+  }
+}
+
 const form = document.getElementById('predict-form');
 const disasterToggle = document.getElementById('disaster_toggle');
 const disasterFields = document.getElementById('disaster-fields');
@@ -658,7 +1379,7 @@ let activeTestData = null;
 if (btnDrawTest) {
   btnDrawTest.addEventListener('click', async () => {
     btnDrawTest.disabled = true;
-    btnDrawTest.textContent = 'Ingesting Telemetry...';
+    btnDrawTest.textContent = 'Đang nạp dữ liệu...';
     try {
       const res = await fetch('/api/random-test-order');
       const result = await res.json();
@@ -666,6 +1387,53 @@ if (btnDrawTest) {
         const order = result.data;
         activeTestData = order; // Lưu vào biến toàn cục của JS để lát submit truyền lên API
         
+        // Điền dữ liệu vào form dùng hàm map phụ trợ
+        const orderDataMapped = {
+          order_date: order.order_date,
+          shipping_days_scheduled: order.shipping_days_scheduled,
+          shipping_mode: order.shipping_mode,
+          market: order.market,
+          order_region: order.order_region,
+          customer_segment: order.customer_segment,
+          department_name: order.department_name,
+          category_name: order.category_name,
+          order_item_quantity: order.order_item_quantity,
+          product_price: order.auto_unit_price,
+          disaster_exposed_real: order.disaster_exposed_real,
+          active_disaster_count_real: order.active_disaster_count_real,
+          known_disaster_count_real: order.known_disaster_count_real,
+          current_max_disaster_magnitude_real: order.current_max_disaster_magnitude_real,
+          current_max_affected_real: order.current_max_affected_real,
+          current_max_deaths_real: order.current_max_deaths_real,
+          order_id: order.order_id_real,
+          product_name: order.product_name_real,
+          shipping_days_real: order.shipping_days_real,
+          disasters: []
+        };
+
+        // Reconstruct disasters array on the fly for telemetry block if disaster exposed
+        if (order.disaster_exposed_real > 0) {
+          const deaths = order.current_max_deaths_real;
+          const mag = order.max_disaster_magnitude_real || order.current_max_disaster_magnitude_real;
+          if (order.supplier_disaster_country_real) {
+            orderDataMapped.disasters.push({
+              name: 'Đứt gãy logistics và ngập lụt cục bộ',
+              location: order.supplier_disaster_country_real,
+              role: 'Supplier Base',
+              magnitude: mag
+            });
+          }
+          if (order.customer_disaster_country_real) {
+            orderDataMapped.disasters.push({
+              name: 'Bão nhiệt đới gây lụt ngập mạng nội địa',
+              location: order.customer_disaster_country_real,
+              role: 'Customer Hub',
+              magnitude: mag
+            });
+          }
+        }
+
+        fillFormData(orderDataMapped);
         // Điền dữ liệu vào form
         form.querySelector('[name="order_date"]').value = order.order_date;
         form.querySelector('[name="shipping_days_scheduled"]').value = order.shipping_days_scheduled;
@@ -727,7 +1495,7 @@ if (btnDrawTest) {
       alert('Lỗi khi tải đơn hàng: ' + err.message);
     } finally {
       btnDrawTest.disabled = false;
-      btnDrawTest.textContent = '🧬 Ingest Live Telemetry Batch';
+      btnDrawTest.textContent = '🧬 Nạp Dữ Liệu Thực Tế Ngẫu Nhiên';
     }
   });
 }
@@ -741,18 +1509,25 @@ if (btnMirrorDisaster) {
     if (!activeTestData) return;
     disasterToggle.checked = true;
     disasterFields.style.display = 'grid';
-    form.querySelector('[name="disaster_magnitude"]').value = activeTestData.current_max_disaster_magnitude_real || 5;
-    form.querySelector('[name="disaster_affected"]').value = activeTestData.current_max_affected_real || 10000;
-    form.querySelector('[name="disaster_deaths"]').value = activeTestData.current_max_deaths_real || 0;
-    btnMirrorDisaster.textContent = '✓ ENVIRONMENT SYNCED';
-    setTimeout(() => { btnMirrorDisaster.textContent = 'MIRROR ENVIRONMENT'; }, 1800);
+    
+    // Gán giá trị an toàn
+    const setVal = (elName, val) => {
+      const el = form.querySelector(`[name="${elName}"]`);
+      if (el) el.value = val;
+    };
+    setVal("disaster_magnitude", activeTestData.current_max_disaster_magnitude_real || 5);
+    setVal("disaster_affected", activeTestData.current_max_affected_real || 10000);
+    setVal("disaster_deaths", activeTestData.current_max_deaths_real || 0);
+
+    btnMirrorDisaster.textContent = '✓ ĐỒNG BỘ THÀNH CÔNG';
+    setTimeout(() => { btnMirrorDisaster.textContent = 'ĐỒNG BỘ THIÊN TAI THỰC TẾ'; }, 1800);
   });
 }
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = form.querySelector('button');
-  btn.disabled = true; btn.textContent = 'INGESTING FEATURE MATRICES...';
+  btn.disabled = true; btn.textContent = 'ĐANG TÍNH LẬP MA TRẬN ĐẶC TRƯNG MÔ HÌNH UNIT...';
 
   const fd = new FormData(form);
   const payload = {};
@@ -784,7 +1559,7 @@ form.addEventListener('submit', async (e) => {
     document.getElementById('result-body').innerHTML =
       '<div class="output-empty-slate">Không thể kết nối máy chủ dự báo. Vui lòng thử lại.</div>';
   } finally {
-    btn.disabled = false; btn.textContent = '⚡ RUN REAL-TIME PREDICTOR PIPELINE';
+    btn.disabled = false; btn.textContent = '⚡ CHẠY HỆ THỐNG DỰ BÁO THỜI GIAN THỰC';
   }
 });
 
