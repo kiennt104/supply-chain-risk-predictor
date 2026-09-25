@@ -14,6 +14,7 @@ xgboost>=2.0.3
 tensorflow>=2.14.0
 keras>=2.14.0
 
-# Optional but recommended
+# Production WSGI Server & Config Environment
+gunicorn>=21.2.0
 python-dotenv==1.0.0  # For .env file support
 
